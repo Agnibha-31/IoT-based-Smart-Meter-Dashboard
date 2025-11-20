@@ -87,64 +87,115 @@ export default function App() {
 
   const updateLocationBasedSettings = async (latitude: number, longitude: number) => {
     try {
-      // Get timezone from coordinates using timezone API
-      const timezoneResponse = await fetch(
-        `https://api.timezonedb.com/v2.1/get-time-zone?key=demo&format=json&by=position&lat=${latitude}&lng=${longitude}`
-      );
+      console.log('Getting location info for:', latitude, longitude);
       
-      if (timezoneResponse.ok) {
-        const timezoneData = await timezoneResponse.json();
-        const detectedTimezone = timezoneData.zoneName || 'UTC';
-        
-        // Map to our timezone format
-        const timezoneMapping: Record<string, string> = {
-          'America/New_York': 'UTC-5',
-          'America/Chicago': 'UTC-6',
-          'America/Denver': 'UTC-7',
-          'America/Los_Angeles': 'UTC-8',
-          'Europe/London': 'UTC+0',
-          'Europe/Paris': 'UTC+1',
-          'Asia/Dubai': 'UTC+4',
-          'Asia/Kolkata': 'UTC+5.5',
-          'Asia/Shanghai': 'UTC+8',
-          'Asia/Tokyo': 'UTC+9',
-          'Australia/Sydney': 'UTC+10',
-        };
-        
-        const mappedTimezone = timezoneMapping[detectedTimezone] || 'UTC+0';
-        
-        // Get location name using reverse geocoding
-        const geocodeResponse = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`
-        );
-        
-        if (geocodeResponse.ok) {
-          const geocodeData = await geocodeResponse.json();
-          const city = geocodeData.address?.city || geocodeData.address?.town || geocodeData.address?.village || '';
-          const country = geocodeData.address?.country || '';
-          const locationString = city && country ? `${city}, ${country}` : country || 'Unknown';
-          
-          // Update user settings via API
-          const updateResponse = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/profile`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: JSON.stringify({
-              timezone: mappedTimezone,
-              location: locationString
-            })
-          });
-          
-          if (updateResponse.ok) {
-            const updatedUser = await updateResponse.json();
-            setUser(updatedUser.user);
+      // Get location name and timezone using reverse geocoding from Nominatim
+      const geocodeResponse = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`,
+        {
+          headers: {
+            'User-Agent': 'SmartMeterDashboard/1.0'
           }
         }
+      );
+      
+      if (!geocodeResponse.ok) {
+        throw new Error('Geocoding failed');
+      }
+      
+      const geocodeData = await geocodeResponse.json();
+      const city = geocodeData.address?.city || geocodeData.address?.town || geocodeData.address?.village || '';
+      const state = geocodeData.address?.state || '';
+      const country = geocodeData.address?.country || '';
+      const countryCode = geocodeData.address?.country_code?.toUpperCase() || '';
+      
+      let locationString = '';
+      if (city && state && country) {
+        locationString = `${city}, ${state}, ${country}`;
+      } else if (city && country) {
+        locationString = `${city}, ${country}`;
+      } else if (country) {
+        locationString = country;
+      } else {
+        locationString = 'Unknown Location';
+      }
+      
+      console.log('Detected location:', locationString);
+      
+      // Calculate timezone based on longitude (rough approximation)
+      // This is a fallback method that works without external API
+      const timezoneOffset = Math.round(longitude / 15);
+      let mappedTimezone = 'UTC+0';
+      
+      if (timezoneOffset > 0) {
+        mappedTimezone = `UTC+${timezoneOffset}`;
+      } else if (timezoneOffset < 0) {
+        mappedTimezone = `UTC${timezoneOffset}`;
+      }
+      
+      // Better timezone detection based on country/region
+      const countryTimezones: Record<string, string> = {
+        'US': 'UTC-5',     // Eastern
+        'CA': 'UTC-5',     // Eastern
+        'GB': 'UTC+0',     // London
+        'IE': 'UTC+0',     // Dublin
+        'FR': 'UTC+1',     // Paris
+        'DE': 'UTC+1',     // Berlin
+        'ES': 'UTC+1',     // Madrid
+        'IT': 'UTC+1',     // Rome
+        'IN': 'UTC+5.5',   // India
+        'CN': 'UTC+8',     // China
+        'JP': 'UTC+9',     // Japan
+        'AU': 'UTC+10',    // Sydney
+        'NZ': 'UTC+12',    // Wellington
+        'BR': 'UTC-3',     // Brasilia
+        'AR': 'UTC-3',     // Buenos Aires
+        'AE': 'UTC+4',     // Dubai
+        'SA': 'UTC+3',     // Riyadh
+        'RU': 'UTC+3',     // Moscow
+      };
+      
+      if (countryCode && countryTimezones[countryCode]) {
+        mappedTimezone = countryTimezones[countryCode];
+      }
+      
+      console.log('Detected timezone:', mappedTimezone);
+      
+      // Update user settings via API
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
+      
+      const updateResponse = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          timezone: mappedTimezone,
+          location: locationString
+        })
+      });
+      
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        console.error('Failed to update profile:', errorText);
+        throw new Error('Profile update failed');
+      }
+      
+      const updatedData = await updateResponse.json();
+      console.log('Profile updated successfully:', updatedData);
+      
+      if (updatedData.user) {
+        setUser(updatedData.user);
+        toast.success(`Location updated: ${locationString}`);
       }
     } catch (error) {
       console.error('Failed to update location-based settings:', error);
+      toast.error('Failed to update location settings');
     }
   };
 
