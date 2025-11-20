@@ -49,6 +49,23 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     };
   };
 
+  // Email validation - proper email format with valid domain
+  const validateEmail = (emailStr: string) => {
+    const trimmed = emailStr.trim();
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const hasValidFormat = emailRegex.test(trimmed);
+    const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'protonmail.com', 'aol.com', 'mail.com'];
+    const domain = trimmed.split('@')[1]?.toLowerCase();
+    
+    return {
+      hasValidFormat: hasValidFormat,
+      hasAtSymbol: trimmed.includes('@'),
+      hasDomain: trimmed.split('@').length === 2 && trimmed.split('@')[1].includes('.'),
+      isCommonDomain: domain ? commonDomains.includes(domain) : false,
+      isValid: hasValidFormat
+    };
+  };
+
   // Password validation
   const validatePassword = (pwd: string) => {
     return {
@@ -61,11 +78,12 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   };
 
   const nameValidation = validateName(name);
+  const emailValidation = validateEmail(email);
   const passwordValidation = validatePassword(password);
   const isPasswordValid = Object.values(passwordValidation).every(v => v);
   const isFormValid = isFirstTimeUser 
-    ? (nameValidation.isValid && email && isPasswordValid)
-    : (email && password.length >= 6);
+    ? (nameValidation.isValid && emailValidation.isValid && isPasswordValid)
+    : (emailValidation.isValid && password.length >= 6);
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault?.();
@@ -226,19 +244,54 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               </div>
             )}
             
-            <div>
+            <div className="relative">
               <label className="block text-white/90 text-sm mb-2 text-center">{isFirstTimeUser ? 'Mail Id' : translate('username')}</label>
-              <motion.input
-                whileFocus={{ scale: 1.02 }}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setUsernameFocused(true)}
-                onBlur={() => setUsernameFocused(false)}
-                className="w-4/5 mx-auto block px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
-                placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
-                autoComplete="username"
-              />
+              <div className="relative w-4/5 mx-auto">
+                <motion.input
+                  whileFocus={{ scale: 1.02 }}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setUsernameFocused(true)}
+                  onBlur={() => setUsernameFocused(false)}
+                  className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
+                  autoComplete="username"
+                />
+                {isFirstTimeUser && email && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center"
+                  >
+                    {emailValidation.isValid ? (
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+              {isFirstTimeUser && email && !emailValidation.isValid && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-red-400 text-center mt-1"
+                >
+                  {!emailValidation.hasAtSymbol && "Email must contain @ symbol"}
+                  {emailValidation.hasAtSymbol && !emailValidation.hasDomain && "Enter a valid email domain (e.g., @gmail.com)"}
+                  {emailValidation.hasDomain && !emailValidation.hasValidFormat && "Enter a valid email format"}
+                </motion.p>
+              )}
             </div>
             
             <div className="relative">
