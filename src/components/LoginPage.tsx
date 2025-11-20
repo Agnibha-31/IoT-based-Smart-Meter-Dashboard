@@ -12,11 +12,13 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const { translate } = useSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
   const [usernameFocused, setUsernameFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
@@ -81,8 +83,9 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const emailValidation = validateEmail(email);
   const passwordValidation = validatePassword(password);
   const isPasswordValid = Object.values(passwordValidation).every(v => v);
+  const passwordsMatch = password === confirmPassword;
   const isFormValid = isFirstTimeUser 
-    ? (nameValidation.isValid && emailValidation.isValid && isPasswordValid)
+    ? (nameValidation.isValid && emailValidation.isValid && isPasswordValid && passwordsMatch)
     : (emailValidation.isValid && password.length >= 6);
 
   async function handleSubmit(e?: React.FormEvent) {
@@ -255,6 +258,11 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setUsernameFocused(true)}
                   onBlur={() => setUsernameFocused(false)}
+                  onClick={() => {
+                    if (isFirstTimeUser && !nameValidation.isValid) {
+                      alert('Enter the name first to continue');
+                    }
+                  }}
                   style={{ paddingLeft: '3.5rem', paddingRight: '3rem' }}
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
@@ -312,6 +320,11 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onBlur={() => {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
+                  }}
+                  onClick={() => {
+                    if (isFirstTimeUser && !emailValidation.isValid) {
+                      alert('Enter mail id first to continue');
+                    }
                   }}
                   style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
@@ -372,6 +385,63 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                 </motion.div>
               )}
             </div>
+
+            {isFirstTimeUser && (
+              <div className="relative">
+                <label className="block text-white/90 text-sm mb-2 text-center">Confirm Password</label>
+                <div className="relative w-4/5 mx-auto">
+                  <motion.input
+                    whileFocus={{ scale: 1.02 }}
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onFocus={() => setConfirmPasswordFocused(true)}
+                    onBlur={() => setConfirmPasswordFocused(false)}
+                    onClick={() => {
+                      if (!isPasswordValid) {
+                        alert('Enter a valid password first to continue');
+                      }
+                    }}
+                    style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
+                    className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                    placeholder={confirmPasswordFocused || confirmPassword ? '' : 'Re-enter your password'}
+                    autoComplete="new-password"
+                    disabled={!isPasswordValid}
+                  />
+                  {confirmPassword && (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center"
+                    >
+                      {passwordsMatch ? (
+                        <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                  {confirmPassword && !passwordsMatch && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-xs mt-1 text-center"
+                    >
+                      Passwords do not match
+                    </motion.p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {isFirstTimeUser && (
               <motion.button
