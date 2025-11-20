@@ -259,6 +259,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
                   autoComplete="username"
+                  disabled={isFirstTimeUser ? !nameValidation.isValid : false}
                 />
                 {isFirstTimeUser && email && (
                   <motion.div 
@@ -316,6 +317,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={passwordFocused || password ? '' : 'Enter your password'}
                   autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
+                  disabled={isFirstTimeUser ? !emailValidation.isValid : false}
                 />
                 {isFirstTimeUser && password && (
                   <motion.div 
