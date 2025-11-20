@@ -312,7 +312,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
-                  style={{ paddingLeft: '5.0rem', paddingRight: '4.0rem' }}
+                  style={{ paddingLeft: '7.0rem', paddingRight: '6.0rem' }}
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={passwordFocused || password ? '' : 'Enter your password'}
                   autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
