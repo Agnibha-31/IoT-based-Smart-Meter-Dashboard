@@ -259,7 +259,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onFocus={() => setUsernameFocused(true)}
                   onBlur={() => setUsernameFocused(false)}
                   style={{ paddingLeft: '3.5rem', paddingRight: '3rem' }}
-                  className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !nameValidation.isValid ? 'pointer-events-none' : ''}`}
                   placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
                   autoComplete="username"
                   disabled={isFirstTimeUser ? !nameValidation.isValid : false}
@@ -317,7 +317,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
                   style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
-                  className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !emailValidation.isValid ? 'pointer-events-none' : ''}`}
                   placeholder={passwordFocused || password ? '' : 'Enter your password'}
                   autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
                   disabled={isFirstTimeUser ? !emailValidation.isValid : false}
@@ -388,7 +388,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
                     style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
-                    className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                    className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${!isPasswordValid ? 'pointer-events-none' : ''}`}
                     placeholder={confirmPasswordFocused || confirmPassword ? '' : 'Re-enter your password'}
                     autoComplete="new-password"
                     disabled={!isPasswordValid}
