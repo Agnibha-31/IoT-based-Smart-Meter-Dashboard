@@ -219,7 +219,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center"
                   >
                     {isPasswordValid ? (
                       <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
