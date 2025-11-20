@@ -258,11 +258,6 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setUsernameFocused(true)}
                   onBlur={() => setUsernameFocused(false)}
-                  onClick={() => {
-                    if (isFirstTimeUser && !nameValidation.isValid) {
-                      alert('Enter the name first to continue');
-                    }
-                  }}
                   style={{ paddingLeft: '3.5rem', paddingRight: '3rem' }}
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
@@ -320,11 +315,6 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onBlur={() => {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
-                  }}
-                  onClick={() => {
-                    if (isFirstTimeUser && !emailValidation.isValid) {
-                      alert('Enter mail id first to continue');
-                    }
                   }}
                   style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
                   className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
@@ -397,11 +387,6 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
-                    onClick={() => {
-                      if (!isPasswordValid) {
-                        alert('Enter a valid password first to continue');
-                      }
-                    }}
                     style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
                     className="w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                     placeholder={confirmPasswordFocused || confirmPassword ? '' : 'Re-enter your password'}
