@@ -15,7 +15,12 @@ import bus from './utils/bus.js';
 const app = express();
 const clients = new Set();
 
-app.use(cors({ origin: config.corsOrigin }));
+app.use(cors({ 
+  origin: config.corsOrigin === '*' ? '*' : config.corsOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('tiny'));
 
