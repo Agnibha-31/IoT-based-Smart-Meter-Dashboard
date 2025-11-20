@@ -310,7 +310,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
-                  className="w-full pl-2 pr-16 py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  className="w-full pl-8 pr-12 py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={passwordFocused || password ? '' : 'Enter your password'}
                   autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
                 />
