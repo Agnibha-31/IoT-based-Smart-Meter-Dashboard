@@ -10,6 +10,7 @@ import readingsRoutes from './routes/readings.js';
 import analyticsRoutes from './routes/analytics.js';
 import exportRoutes from './routes/export.js';
 import devicesRoutes from './routes/devices.js';
+import adminRoutes from './routes/admin.js';
 import bus from './utils/bus.js';
 
 const app = express();
@@ -69,6 +70,7 @@ app.use('/api/readings', readingsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/devices', devicesRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((err, req, res, next) => {
   console.error('[API_ERROR]', err);
