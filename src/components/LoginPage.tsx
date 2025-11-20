@@ -37,6 +37,18 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     checkFirstTime();
   }, []);
 
+  // Full name validation - at least 2 words, each starting with capital letter
+  const validateName = (fullName: string) => {
+    const trimmed = fullName.trim();
+    const words = trimmed.split(/\s+/).filter(word => word.length > 0);
+    
+    return {
+      hasTwoWords: words.length >= 2,
+      allCapitalized: words.every(word => /^[A-Z]/.test(word)),
+      isValid: words.length >= 2 && words.every(word => /^[A-Z]/.test(word))
+    };
+  };
+
   // Password validation
   const validatePassword = (pwd: string) => {
     return {
@@ -48,10 +60,11 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     };
   };
 
+  const nameValidation = validateName(name);
   const passwordValidation = validatePassword(password);
   const isPasswordValid = Object.values(passwordValidation).every(v => v);
   const isFormValid = isFirstTimeUser 
-    ? (name.length >= 2 && email && isPasswordValid)
+    ? (nameValidation.isValid && email && isPasswordValid)
     : (email && password.length >= 6);
 
   async function handleSubmit(e?: React.FormEvent) {
@@ -163,24 +176,58 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             </div>
             
             {isFirstTimeUser && (
-              <div>
+              <div className="relative">
                 <label className="block text-white/90 text-sm mb-2 text-center">Full Name</label>
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onFocus={() => setNameFocused(true)}
-                  onBlur={() => setNameFocused(false)}
-                  className="w-4/5 mx-auto block px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
-                  placeholder={nameFocused || name ? '' : 'Enter your name'}
-                  autoComplete="name"
-                />
+                <div className="relative w-4/5 mx-auto">
+                  <motion.input
+                    whileFocus={{ scale: 1.02 }}
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={() => setNameFocused(true)}
+                    onBlur={() => setNameFocused(false)}
+                    className="w-full pl-3 pr-10 py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                    placeholder={nameFocused || name ? '' : 'Enter your full name'}
+                    autoComplete="name"
+                  />
+                  {name && (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center"
+                    >
+                      {nameValidation.isValid ? (
+                        <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+                {name && !nameValidation.isValid && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-red-400 text-center mt-1"
+                  >
+                    {!nameValidation.hasTwoWords && "Enter at least 2 words"}
+                    {nameValidation.hasTwoWords && !nameValidation.allCapitalized && "Each word must start with a capital letter"}
+                  </motion.p>
+                )}
               </div>
             )}
             
             <div>
-              <label className="block text-white/90 text-sm mb-2 text-center">{translate('username')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">{isFirstTimeUser ? 'Mail Id' : translate('username')}</label>
               <motion.input
                 whileFocus={{ scale: 1.02 }}
                 type="email"
@@ -189,13 +236,13 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                 onFocus={() => setUsernameFocused(true)}
                 onBlur={() => setUsernameFocused(false)}
                 className="w-4/5 mx-auto block px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
-                placeholder={usernameFocused || email ? '' : translate('enter_username')}
+                placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
                 autoComplete="username"
               />
             </div>
             
             <div className="relative">
-              <label className="block text-white/90 text-sm mb-2 text-center">{translate('password')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">{isFirstTimeUser ? 'Create Password' : translate('password')}</label>
               <div className="relative w-4/5 mx-auto">
                 <motion.input
                   whileFocus={{ scale: 1.02 }}
