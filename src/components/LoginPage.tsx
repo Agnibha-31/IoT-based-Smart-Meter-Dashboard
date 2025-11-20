@@ -19,6 +19,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
+  const [showPasswordHelp, setShowPasswordHelp] = useState(false);
   const debounceTimer = useRef<number | null>(null);
   const lastTried = useRef<{ email: string; password: string } | null>(null);
 
@@ -36,6 +37,23 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     checkFirstTime();
   }, []);
 
+  // Password validation
+  const validatePassword = (pwd: string) => {
+    return {
+      minLength: pwd.length >= 8,
+      hasUpper: /[A-Z]/.test(pwd),
+      hasLower: /[a-z]/.test(pwd),
+      hasNumber: /[0-9]/.test(pwd),
+      hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+    };
+  };
+
+  const passwordValidation = validatePassword(password);
+  const isPasswordValid = Object.values(passwordValidation).every(v => v);
+  const isFormValid = isFirstTimeUser 
+    ? (name.length >= 2 && email && isPasswordValid)
+    : (email && password.length >= 6);
+
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault?.();
     if (!email || !password) {
@@ -44,6 +62,10 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     }
     if (isFirstTimeUser && !name) {
       setShowError('Please provide your name');
+      return;
+    }
+    if (isFirstTimeUser && !isPasswordValid) {
+      setShowError('Password does not meet requirements');
       return;
     }
     setShowError(null);
@@ -62,22 +84,21 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     }
   }
 
-  // Auto-authenticate as the user types (debounced to reduce spam)
+  // Auto-authenticate for existing users only (not first-time registration)
   useEffect(() => {
+    if (isFirstTimeUser) return; // Disable auto-login for registration
+    
     if (debounceTimer.current) {
       window.clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
-    // Only attempt when both fields have some value and not already submitting
     if (!email || !password || isSubmitting) return;
-    // Avoid duplicate immediate retries for the exact same credentials
     if (lastTried.current &&
         lastTried.current.email === email &&
         lastTried.current.password === password) {
       return;
     }
     debounceTimer.current = window.setTimeout(() => {
-      // Fire and forget; handleSubmit manages state and errors
       void handleSubmit();
     }, 700);
     return () => {
@@ -86,7 +107,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
         debounceTimer.current = null;
       }
     };
-  }, [email, password, isSubmitting]);
+  }, [email, password, isSubmitting, isFirstTimeUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 px-4">
@@ -173,28 +194,82 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               />
             </div>
             
-            <div>
+            <div className="relative">
               <label className="block text-white/90 text-sm mb-2 text-center">{translate('password')}</label>
-              <motion.input
-                whileFocus={{ scale: 1.02 }}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setPasswordFocused(true)}
-                onBlur={() => setPasswordFocused(false)}
-                className="w-4/5 mx-auto block px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
-                placeholder={passwordFocused || password ? '' : 'Enter your password'}
-                autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
-              />
+              <div className="relative w-4/5 mx-auto">
+                <motion.input
+                  whileFocus={{ scale: 1.02 }}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => {
+                    setPasswordFocused(true);
+                    if (isFirstTimeUser) setShowPasswordHelp(true);
+                  }}
+                  onBlur={() => {
+                    setPasswordFocused(false);
+                    setTimeout(() => setShowPasswordHelp(false), 200);
+                  }}
+                  className="w-full px-3 py-2 pr-10 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  placeholder={passwordFocused || password ? '' : 'Enter your password'}
+                  autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
+                />
+                {isFirstTimeUser && password && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {isPasswordValid ? (
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Password Requirements Tooltip */}
+              {isFirstTimeUser && showPasswordHelp && password && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute left-1/2 -translate-x-1/2 mt-2 w-72 bg-slate-800 border border-white/20 rounded-lg p-4 shadow-xl z-50"
+                >
+                  <p className="text-white text-xs font-medium mb-2">Password Requirements:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li className={passwordValidation.minLength ? 'text-green-400' : 'text-red-400'}>
+                      {passwordValidation.minLength ? '✓' : '✗'} At least 8 characters
+                    </li>
+                    <li className={passwordValidation.hasUpper ? 'text-green-400' : 'text-red-400'}>
+                      {passwordValidation.hasUpper ? '✓' : '✗'} One uppercase letter (A-Z)
+                    </li>
+                    <li className={passwordValidation.hasLower ? 'text-green-400' : 'text-red-400'}>
+                      {passwordValidation.hasLower ? '✓' : '✗'} One lowercase letter (a-z)
+                    </li>
+                    <li className={passwordValidation.hasNumber ? 'text-green-400' : 'text-red-400'}>
+                      {passwordValidation.hasNumber ? '✓' : '✗'} One number (0-9)
+                    </li>
+                    <li className={passwordValidation.hasSpecial ? 'text-green-400' : 'text-red-400'}>
+                      {passwordValidation.hasSpecial ? '✓' : '✗'} One special character (!@#$%^&*)
+                    </li>
+                  </ul>
+                </motion.div>
+              )}
             </div>
 
             {isFirstTimeUser && (
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: isFormValid ? 1.05 : 1 }}
+                whileTap={{ scale: isFormValid ? 0.95 : 1 }}
                 type="submit"
-                disabled={isSubmitting || !email || !password || !name}
-                className="w-4/5 mx-auto block py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || !isFormValid}
+                className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
+                  isFormValid && !isSubmitting
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
+                    : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
+                }`}
               >
                 {isSubmitting ? 'Creating Account...' : 'Create Admin Account'}
               </motion.button>
