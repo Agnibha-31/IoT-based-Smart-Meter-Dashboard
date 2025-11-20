@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: smart-meter-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CORS_ORIGIN
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+        sync: false
+      - key: JWT_EXPIRY
+        value: 12h
+      - key: DEVICE_ID
+        value: meter-001
+      - key: DEVICE_API_KEY
+        generateValue: true
+        sync: false
+      - key: DB_FILE
+        value: /opt/render/project/src/storage/smartmeter.sqlite
+      - key: BASE_TARIFF_PER_KWH
+        value: 6.5
+    disk:
+      name: smart-meter-storage
+      mountPath: /opt/render/project/src/storage
+      sizeGB: 1
