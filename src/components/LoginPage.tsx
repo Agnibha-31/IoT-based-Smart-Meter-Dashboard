@@ -210,22 +210,31 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
-                  className="w-full px-3 py-2 pr-10 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  className="w-full pl-3 pr-10 py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                   placeholder={passwordFocused || password ? '' : 'Enter your password'}
                   autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
                 />
                 {isFirstTimeUser && password && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                  >
                     {isPasswordValid ? (
-                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
                     ) : (
-                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
                     )}
-                  </div>
+                  </motion.div>
                 )}
               </div>
               
