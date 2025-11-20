@@ -77,6 +77,15 @@ export const login = async (email: string, password: string) => {
   return result;
 };
 
+export const register = async (email: string, password: string, name: string) => {
+  const result = await request<{ token: string; user: any }>('/api/auth/register', {
+    method: 'POST',
+    body: { email, password, name },
+  });
+  setAccessToken(result.token);
+  return result;
+};
+
 export const fetchCurrentUser = () =>
   request<{ user: any }>('/api/auth/me');
 

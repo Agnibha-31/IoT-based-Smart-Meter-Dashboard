@@ -5,29 +5,55 @@ import { useSettings } from './SettingsContext';
 
 interface LoginProps {
   onLogin: (payload: { email: string; password: string }) => Promise<void> | void;
+  onRegister: (payload: { email: string; password: string; name: string }) => Promise<void> | void;
 }
 
-export default function LoginPage({ onLogin }: LoginProps) {
+export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const { translate } = useSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
   const [usernameFocused, setUsernameFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
   const debounceTimer = useRef<number | null>(null);
   const lastTried = useRef<{ email: string; password: string } | null>(null);
+
+  // Check if this is first time user (no users exist yet)
+  useEffect(() => {
+    const checkFirstTime = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/check-first-user`);
+        const data = await response.json();
+        setIsFirstTimeUser(data.isFirstUser || false);
+      } catch {
+        setIsFirstTimeUser(false);
+      }
+    };
+    checkFirstTime();
+  }, []);
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault?.();
     if (!email || !password) {
-      setShowError('Please provide both email and password');
+      setShowError('Please provide email and password');
+      return;
+    }
+    if (isFirstTimeUser && !name) {
+      setShowError('Please provide your name');
       return;
     }
     setShowError(null);
     setIsSubmitting(true);
     try {
-      await onLogin({ email, password });
+      if (isFirstTimeUser) {
+        await onRegister({ email, password, name });
+      } else {
+        await onLogin({ email, password });
+      }
       lastTried.current = { email, password };
     } catch (err: any) {
       setShowError(err?.message || 'Authentication failed');
@@ -110,8 +136,27 @@ export default function LoginPage({ onLogin }: LoginProps) {
         >
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-white/90 text-sm mb-6">{translate('enter_credentials')}</p>
+              <p className="text-white/90 text-sm mb-6">
+                {isFirstTimeUser ? 'Create your admin account' : translate('enter_credentials')}
+              </p>
             </div>
+            
+            {isFirstTimeUser && (
+              <div>
+                <label className="block text-white/90 text-sm mb-2 text-center">Full Name</label>
+                <motion.input
+                  whileFocus={{ scale: 1.02 }}
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onFocus={() => setNameFocused(true)}
+                  onBlur={() => setNameFocused(false)}
+                  className="w-4/5 mx-auto block px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
+                  placeholder={nameFocused || name ? '' : 'Enter your name'}
+                  autoComplete="name"
+                />
+              </div>
+            )}
             
             <div>
               <label className="block text-white/90 text-sm mb-2 text-center">{translate('username')}</label>
@@ -139,11 +184,21 @@ export default function LoginPage({ onLogin }: LoginProps) {
                 onBlur={() => setPasswordFocused(false)}
                 className="w-4/5 mx-auto block px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center"
                 placeholder={passwordFocused || password ? '' : 'Enter your password'}
-                autoComplete="current-password"
+                autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
               />
             </div>
 
-            {/* status area intentionally removed for cleaner UI */}
+            {isFirstTimeUser && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                type="submit"
+                disabled={isSubmitting || !email || !password || !name}
+                className="w-4/5 mx-auto block py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Creating Account...' : 'Create Admin Account'}
+              </motion.button>
+            )}
 
             {showError && (
               <motion.div

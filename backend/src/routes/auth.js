@@ -15,6 +15,15 @@ import {
 
 const router = Router();
 
+// Check if this is the first user (for showing register vs login)
+router.get(
+  '/check-first-user',
+  asyncHandler(async (req, res) => {
+    const userCount = await countUsers();
+    res.json({ isFirstUser: userCount === 0 });
+  }),
+);
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),

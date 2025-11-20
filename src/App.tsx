@@ -5,7 +5,7 @@ import LoginPage from './components/LoginPage';
 import LoadingScreen from './components/LoadingScreen';
 import Dashboard from './components/Dashboard';
 import { SettingsProvider } from './components/SettingsContext';
-import { fetchCurrentUser, login as apiLogin, setAccessToken } from './utils/apiClient';
+import { fetchCurrentUser, login as apiLogin, register as apiRegister, setAccessToken } from './utils/apiClient';
 
 type ViewState = 'checking' | 'login' | 'loading' | 'dashboard';
 
@@ -37,6 +37,19 @@ export default function App() {
     } catch (err: any) {
       setView('login');
       toast.error(err?.message || 'Authentication failed');
+    }
+  };
+
+  const handleRegister = async ({ email, password, name }: { email: string; password: string; name: string }) => {
+    setView('loading');
+    try {
+      const result = await apiRegister(email, password, name);
+      setUser(result.user);
+      toast.success('Account created successfully!');
+      setView('dashboard');
+    } catch (err: any) {
+      setView('login');
+      toast.error(err?.message || 'Registration failed');
     }
   };
 
@@ -86,7 +99,7 @@ export default function App() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <LoginPage onLogin={handleLogin} />
+              <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
             </motion.div>
           )}
 
