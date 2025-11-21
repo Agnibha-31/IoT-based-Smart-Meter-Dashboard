@@ -116,10 +116,45 @@ export default function App() {
       }
       
       const geocodeData = await geocodeResponse.json();
-      const city = geocodeData.address?.city || geocodeData.address?.town || geocodeData.address?.village || '';
+      
+      // Prioritize major cities over towns/villages for better accuracy
+      // Check address components in order of importance
+      let city = geocodeData.address?.city || 
+                 geocodeData.address?.municipality ||
+                 geocodeData.address?.county ||
+                 geocodeData.address?.town || 
+                 geocodeData.address?.village || '';
+      
       const state = geocodeData.address?.state || '';
       const country = geocodeData.address?.country || '';
       const countryCode = geocodeData.address?.country_code?.toUpperCase() || '';
+      
+      // For India, try to get the district/metro city if available
+      if (countryCode === 'IN') {
+        // Check if we're near a major metro city based on coordinates
+        const majorCities: Record<string, { lat: number; lon: number; radius: number }> = {
+          'Kolkata': { lat: 22.5726, lon: 88.3639, radius: 0.5 },
+          'Mumbai': { lat: 19.0760, lon: 72.8777, radius: 0.5 },
+          'Delhi': { lat: 28.7041, lon: 77.1025, radius: 0.5 },
+          'Bangalore': { lat: 12.9716, lon: 77.5946, radius: 0.5 },
+          'Chennai': { lat: 13.0827, lon: 80.2707, radius: 0.5 },
+          'Hyderabad': { lat: 17.3850, lon: 78.4867, radius: 0.5 },
+          'Pune': { lat: 18.5204, lon: 73.8567, radius: 0.5 },
+          'Ahmedabad': { lat: 23.0225, lon: 72.5714, radius: 0.5 }
+        };
+        
+        for (const [cityName, coords] of Object.entries(majorCities)) {
+          const distance = Math.sqrt(
+            Math.pow(latitude - coords.lat, 2) + 
+            Math.pow(longitude - coords.lon, 2)
+          );
+          if (distance <= coords.radius) {
+            city = cityName;
+            console.log(`Detected major city: ${cityName} (within ${coords.radius}° radius)`);
+            break;
+          }
+        }
+      }
       
       let locationString = '';
       if (city && state && country) {
