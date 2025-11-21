@@ -514,6 +514,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
     if (offset === undefined && timezone.includes('/')) {
       offset = IANA_OFFSETS[timezone] ?? 0;
     }
+    console.log('SettingsContext: getCurrentTime - timezone:', timezone, 'offset:', offset);
     return new Date(utc + (Number(offset || 0) * 3600000));
   };
 
@@ -542,21 +543,28 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
   useEffect(() => {
     let cancelled = false;
     const fetchWeather = async () => {
-      if (!geoCoords) return;
+      if (!geoCoords) {
+        console.log('SettingsContext: No geo coords, skipping weather fetch');
+        return;
+      }
+      console.log('SettingsContext: Fetching weather for coords:', geoCoords);
       try {
         const cacheKey = 'smartmeter_weather_cache';
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           const { ts, data } = JSON.parse(cached);
           if (Date.now() - ts < 15 * 60 * 1000) {
+            console.log('SettingsContext: Using cached weather:', data);
             setLiveWeather(data);
             return;
           }
         }
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${geoCoords.lat}&longitude=${geoCoords.lon}&current=temperature_2m,weather_code`;
+        console.log('SettingsContext: Fetching weather from API:', url);
         const res = await fetch(url);
         if (!res.ok) throw new Error('weather fetch failed');
         const json = await res.json();
+        console.log('SettingsContext: Weather API response:', json);
         const temp = json?.current?.temperature_2m;
         const code = json?.current?.weather_code;
         
@@ -574,9 +582,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         const condition = typeof code === 'number' ? (weatherCodeMap[code] || 'Partly Cloudy') : 'Clear';
         const data = { temperature: typeof temp === 'number' ? Math.round(temp) : 0, condition };
         if (cancelled) return;
+        console.log('SettingsContext: Setting live weather:', data);
         setLiveWeather(data);
         localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
-      } catch {}
+      } catch (error) {
+        console.error('SettingsContext: Weather fetch error:', error);
+      }
     };
     fetchWeather();
   }, [geoCoords]);
