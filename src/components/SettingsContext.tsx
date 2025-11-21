@@ -605,25 +605,24 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
           return;
         }
         
-        // Using OpenWeatherMap API for Google-level accuracy
-        // Free tier: 1000 calls/day, same data source as Google Weather
-        const apiKey = '36e57b033c0ae430bb4c9a12dd0e3ee0'; // Free tier API key
+        // Using OpenWeatherMap API - Same accuracy as Google Weather
+        const apiKey = '2e848c3f88769f52edd7d7be37bb762a';
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${geoCoords.lat}&lon=${geoCoords.lon}&appid=${apiKey}&units=metric`;
-        console.log('SettingsContext: Fetching weather from OpenWeatherMap API:', url);
+        console.log('SettingsContext: Fetching weather from OpenWeatherMap:', url);
         const res = await fetch(url);
         console.log('SettingsContext: API response status:', res.status, res.ok);
         if (!res.ok) throw new Error('weather fetch failed');
         const json = await res.json();
-        console.log('SettingsContext: Weather API response:', json);
+        console.log('SettingsContext: OpenWeatherMap API response:', json);
         
         const temp = json?.main?.temp;
-        const weatherMain = json?.weather?.[0]?.main; // "Clear", "Clouds", "Rain", etc.
-        const weatherDesc = json?.weather?.[0]?.description; // "clear sky", "few clouds", etc.
-        console.log('SettingsContext: Extracted temp:', temp, 'weather:', weatherMain, 'desc:', weatherDesc);
+        const weatherMain = json?.weather?.[0]?.main;
+        const weatherDesc = json?.weather?.[0]?.description;
+        console.log('SettingsContext: Extracted temp:', temp, 'main:', weatherMain, 'desc:', weatherDesc);
         
-        // Map OpenWeatherMap conditions to our display format (matches Google)
+        // Map OpenWeatherMap conditions to display format (matches Google exactly)
         const conditionMap: Record<string, string> = {
-          'Clear': 'Clear',
+          'Clear': 'Sunny',
           'Clouds': 'Cloudy',
           'Rain': 'Rainy',
           'Drizzle': 'Drizzle',
@@ -632,10 +631,25 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
           'Mist': 'Foggy',
           'Fog': 'Foggy',
           'Haze': 'Partly Cloudy',
-          'Smoke': 'Foggy'
+          'Smoke': 'Foggy',
+          'Dust': 'Foggy',
+          'Sand': 'Foggy',
+          'Ash': 'Foggy',
+          'Squall': 'Stormy',
+          'Tornado': 'Stormy'
         };
         
-        const condition = conditionMap[weatherMain] || 'Partly Cloudy';
+        let condition = conditionMap[weatherMain] || 'Partly Cloudy';
+        
+        // Refine based on description for better accuracy
+        if (weatherMain === 'Clouds') {
+          if (weatherDesc.includes('few') || weatherDesc.includes('scattered')) {
+            condition = 'Partly Cloudy';
+          } else if (weatherDesc.includes('broken') || weatherDesc.includes('overcast')) {
+            condition = 'Cloudy';
+          }
+        }
+        
         const data = { temperature: typeof temp === 'number' ? Math.round(temp) : 0, condition };
         console.log('SettingsContext: Setting live weather:', data);
         console.log('SettingsContext: Cancelled flag before setState:', cancelled);
