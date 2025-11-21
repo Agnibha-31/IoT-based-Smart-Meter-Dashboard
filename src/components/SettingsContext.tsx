@@ -575,6 +575,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         const cacheKey = 'smartmeter_weather_cache';
         const cached = localStorage.getItem(cacheKey);
         console.log('SettingsContext: Weather cache value:', cached);
+        
+        let shouldFetchFresh = true;
+        
         if (cached) {
           try {
             const { ts, data, coords } = JSON.parse(cached);
@@ -586,7 +589,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
             if (coords?.lat === geoCoords.lat && coords?.lon === geoCoords.lon && Date.now() - ts < 15 * 60 * 1000) {
               console.log('SettingsContext: Using cached weather:', data);
               setLiveWeather(data);
-              return;
+              shouldFetchFresh = false;
             } else {
               console.log('SettingsContext: Cache is for different location or expired, fetching fresh data');
             }
@@ -596,6 +599,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         } else {
           console.log('SettingsContext: No cache found, will fetch fresh data');
         }
+        
+        if (!shouldFetchFresh) {
+          console.log('SettingsContext: Using cache, skipping API fetch');
+          return;
+        }
+        
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${geoCoords.lat}&longitude=${geoCoords.lon}&current=temperature_2m,weather_code`;
         console.log('SettingsContext: Fetching weather from API:', url);
         const res = await fetch(url);
