@@ -520,12 +520,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
       if (timezone.includes('/')) {
         // IANA timezone format (e.g., 'Asia/Kolkata')
         offset = IANA_OFFSETS[timezone] ?? 0;
-      } else if (timezone.startsWith('UTC')) {
-        // Parse UTC offset format (e.g., 'UTC+5.5', 'UTC-5', 'UTC+0')
-        const match = timezone.match(/UTC([+-]?)(\d+(?:\.\d+)?)/);
+      } else if (timezone.startsWith('UTC') || timezone.startsWith('GMT')) {
+        // Parse UTC/GMT offset format (e.g., 'GMT+5:30', 'UTC+5.5', 'GMT-5:00')
+        const match = timezone.match(/(UTC|GMT)([+-]?)(\d+):?(\d+)?/);
         if (match) {
-          const sign = match[1] === '-' ? -1 : 1;
-          offset = sign * parseFloat(match[2]);
+          const sign = match[2] === '-' ? -1 : 1;
+          const hours = parseFloat(match[3]);
+          const minutes = match[4] ? parseFloat(match[4]) : 0;
+          offset = sign * (hours + minutes / 60);
         }
       }
     }

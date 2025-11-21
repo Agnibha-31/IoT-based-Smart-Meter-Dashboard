@@ -338,16 +338,16 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
         locationString = 'Unknown Location';
       }
 
-      // Map timezone based on country
+      // Map timezone based on country (GMT format)
       const countryTimezones: Record<string, string> = {
-        'US': 'UTC-5', 'CA': 'UTC-5', 'GB': 'UTC+0', 'IE': 'UTC+0',
-        'FR': 'UTC+1', 'DE': 'UTC+1', 'ES': 'UTC+1', 'IT': 'UTC+1',
-        'IN': 'UTC+5.5', 'CN': 'UTC+8', 'JP': 'UTC+9', 'AU': 'UTC+10',
-        'NZ': 'UTC+12', 'BR': 'UTC-3', 'AR': 'UTC-3', 'AE': 'UTC+4',
-        'SA': 'UTC+3', 'RU': 'UTC+3',
+        'US': 'GMT-5:00', 'CA': 'GMT-5:00', 'GB': 'GMT+0:00', 'IE': 'GMT+0:00',
+        'FR': 'GMT+1:00', 'DE': 'GMT+1:00', 'ES': 'GMT+1:00', 'IT': 'GMT+1:00',
+        'IN': 'GMT+5:30', 'CN': 'GMT+8:00', 'JP': 'GMT+9:00', 'AU': 'GMT+10:00',
+        'NZ': 'GMT+12:00', 'BR': 'GMT-3:00', 'AR': 'GMT-3:00', 'AE': 'GMT+4:00',
+        'SA': 'GMT+3:00', 'RU': 'GMT+3:00',
       };
 
-      const mappedTimezone = countryTimezones[countryCode] || 'UTC+0';
+      const mappedTimezone = countryTimezones[countryCode] || 'GMT+0:00';
 
       // Update backend
       await persistPreferences({
