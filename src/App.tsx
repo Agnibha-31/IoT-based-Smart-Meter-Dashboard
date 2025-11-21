@@ -138,26 +138,26 @@ export default function App() {
         mappedTimezone = `UTC${timezoneOffset}`;
       }
       
-      // Better timezone detection based on country/region
+      // Better timezone detection based on country/region (GMT format)
       const countryTimezones: Record<string, string> = {
-        'US': 'UTC-5',     // Eastern
-        'CA': 'UTC-5',     // Eastern
-        'GB': 'UTC+0',     // London
-        'IE': 'UTC+0',     // Dublin
-        'FR': 'UTC+1',     // Paris
-        'DE': 'UTC+1',     // Berlin
-        'ES': 'UTC+1',     // Madrid
-        'IT': 'UTC+1',     // Rome
-        'IN': 'UTC+5.5',   // India
-        'CN': 'UTC+8',     // China
-        'JP': 'UTC+9',     // Japan
-        'AU': 'UTC+10',    // Sydney
-        'NZ': 'UTC+12',    // Wellington
-        'BR': 'UTC-3',     // Brasilia
-        'AR': 'UTC-3',     // Buenos Aires
-        'AE': 'UTC+4',     // Dubai
-        'SA': 'UTC+3',     // Riyadh
-        'RU': 'UTC+3',     // Moscow
+        'US': 'GMT-5:00',     // Eastern
+        'CA': 'GMT-5:00',     // Eastern
+        'GB': 'GMT+0:00',     // London
+        'IE': 'GMT+0:00',     // Dublin
+        'FR': 'GMT+1:00',     // Paris
+        'DE': 'GMT+1:00',     // Berlin
+        'ES': 'GMT+1:00',     // Madrid
+        'IT': 'GMT+1:00',     // Rome
+        'IN': 'GMT+5:30',     // India
+        'CN': 'GMT+8:00',     // China
+        'JP': 'GMT+9:00',     // Japan
+        'AU': 'GMT+10:00',    // Sydney
+        'NZ': 'GMT+12:00',    // Wellington
+        'BR': 'GMT-3:00',     // Brasilia
+        'AR': 'GMT-3:00',     // Buenos Aires
+        'AE': 'GMT+4:00',     // Dubai
+        'SA': 'GMT+3:00',     // Riyadh
+        'RU': 'GMT+3:00',     // Moscow
       };
       
       if (countryCode && countryTimezones[countryCode]) {
