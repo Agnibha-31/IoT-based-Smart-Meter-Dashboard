@@ -165,7 +165,7 @@ export default function Sidebar({ currentPage, onPageChange, collapsed, onToggle
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className="flex-1 min-w-0"
               >
-                <p className="text-white font-medium truncate">{user?.username}</p>
+                <p className="text-white font-medium truncate">{user?.username || user?.email || user?.name || 'User'}</p>
               </motion.div>
             )}
           </AnimatePresence>
