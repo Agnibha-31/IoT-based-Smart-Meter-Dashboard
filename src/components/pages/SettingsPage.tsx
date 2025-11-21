@@ -822,14 +822,14 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   className="flex items-center justify-between p-3 bg-slate-700 rounded-lg"
                 >
                   <span className="text-white text-sm">
-                    {key === 'email' && 'Email Notifications'}
-                    {key === 'alerts' && 'System Alerts'}
-                    {key === 'reports' && 'Weekly Reports'}
-                    {key === 'maintenance' && 'Maintenance Notices'}
-                    {key === 'powerOutage' && 'Power Outage Alerts'}
-                    {key === 'lowVoltage' && 'Low Voltage Warnings'}
-                    {key === 'highUsage' && 'High Usage Alerts'}
-                    {key === 'weeklyReport' && 'Weekly Summary'}
+                    {key === 'email' && translate('email_notifications')}
+                    {key === 'alerts' && translate('system_alerts')}
+                    {key === 'reports' && translate('weekly_reports')}
+                    {key === 'maintenance' && translate('maintenance_notices')}
+                    {key === 'powerOutage' && translate('power_outage_alerts')}
+                    {key === 'lowVoltage' && translate('low_voltage_warnings')}
+                    {key === 'highUsage' && translate('high_usage_alerts')}
+                    {key === 'weeklyReport' && translate('weekly_summary')}
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -842,14 +842,14 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                         // Update notification service in real-time
                         updateNotificationSettings(next);
                         
-                        const notifName = key === 'email' ? 'Email Notifications' :
-                                         key === 'alerts' ? 'System Alerts' :
-                                         key === 'reports' ? 'Weekly Reports' :
-                                         key === 'maintenance' ? 'Maintenance Notices' :
-                                         key === 'powerOutage' ? 'Power Outage Alerts' :
-                                         key === 'lowVoltage' ? 'Low Voltage Warnings' :
-                                         key === 'highUsage' ? 'High Usage Alerts' :
-                                         key === 'weeklyReport' ? 'Weekly Summary' : 'Notification';
+                        const notifName = key === 'email' ? translate('email_notifications') :
+                                         key === 'alerts' ? translate('system_alerts') :
+                                         key === 'reports' ? translate('weekly_reports') :
+                                         key === 'maintenance' ? translate('maintenance_notices') :
+                                         key === 'powerOutage' ? translate('power_outage_alerts') :
+                                         key === 'lowVoltage' ? translate('low_voltage_warnings') :
+                                         key === 'highUsage' ? translate('high_usage_alerts') :
+                                         key === 'weeklyReport' ? translate('weekly_summary') : translate('notifications');
                         
                         toast.success(`${notifName} ${e.target.checked ? 'enabled' : 'disabled'}`, {
                           description: e.target.checked ? 'You will now receive these notifications' : 'Notifications disabled',
