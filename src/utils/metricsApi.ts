@@ -9,7 +9,7 @@ export type SummaryMetrics = {
   power_distribution: { active_kw: number; reactive_kvar: number; apparent_kva: number };
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 export async function fetchSummary(start?: number, end?: number): Promise<SummaryMetrics> {
   const url = new URL(`${API_BASE}/api/metrics/summary`);
