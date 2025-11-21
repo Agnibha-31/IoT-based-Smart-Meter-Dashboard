@@ -190,8 +190,25 @@ export default function App() {
       console.log('Profile updated successfully:', updatedData);
       
       if (updatedData.user) {
-        setUser(updatedData.user);
-        toast.success(`Location updated: ${locationString}`);
+        // Update user state with new timezone and location
+        const newUser = {
+          ...user,
+          timezone: updatedData.user.timezone,
+          location: updatedData.user.location
+        };
+        setUser(newUser);
+        
+        // Force a re-render by fetching fresh user data
+        setTimeout(async () => {
+          try {
+            const freshUser = await fetchCurrentUser();
+            setUser(freshUser.user);
+            toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}`);
+          } catch (err) {
+            console.error('Failed to refresh user data:', err);
+            toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}`);
+          }
+        }, 500);
       }
     } catch (error) {
       console.error('Failed to update location-based settings:', error);
@@ -205,17 +222,20 @@ export default function App() {
     setView('login');
   };
 
-  const initialSettings = user
-    ? {
-        language: user.language,
-        timezone: user.timezone,
-        currency: user.currency,
-        location: user.location,
-      }
-    : undefined;
+  const initialSettings = React.useMemo(() => 
+    user
+      ? {
+          language: user.language,
+          timezone: user.timezone,
+          currency: user.currency,
+          location: user.location,
+        }
+      : undefined,
+    [user?.language, user?.timezone, user?.currency, user?.location]
+  );
 
   return (
-    <SettingsProvider initialSettings={initialSettings}>
+    <SettingsProvider key={`${user?.timezone}-${user?.location}`} initialSettings={initialSettings}>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800" style={{ fontFamily: 'Arial, sans-serif' }}>
         <Toaster
           position="top-right"
