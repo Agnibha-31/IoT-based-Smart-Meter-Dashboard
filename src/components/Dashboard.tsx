@@ -12,6 +12,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import DataDownloadPage from './pages/DataDownloadPage';
 import SettingsPage from './pages/SettingsPage';
 import CostPage from './pages/CostPage';
+import { initializeNotificationService, getNotificationService } from '../utils/notificationService';
 
 interface DashboardProps {
   user: any;
@@ -44,6 +45,19 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     return () => clearInterval(timer);
   }, []);
 
+  // Initialize notification service with saved settings
+  useEffect(() => {
+    const savedNotifications = localStorage.getItem('smartmeter_notifications');
+    if (savedNotifications) {
+      try {
+        const settings = JSON.parse(savedNotifications);
+        initializeNotificationService(settings);
+      } catch (e) {
+        console.error('Failed to initialize notification service:', e);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const socket = io(import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3000', {
       transports: ['websocket'],
@@ -54,6 +68,18 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         ...prev,
         ...payload,
       }));
+
+      // Check notification conditions with the new data
+      const notifService = getNotificationService();
+      if (notifService && payload) {
+        if (payload.vrms !== undefined) {
+          notifService.checkVoltage(payload.vrms);
+          notifService.checkPowerOutage(payload.vrms, payload.irms || 0);
+        }
+        if (payload.power !== undefined) {
+          notifService.checkHighUsage(payload.power);
+        }
+      }
     });
 
     return () => {

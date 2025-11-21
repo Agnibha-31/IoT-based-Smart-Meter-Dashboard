@@ -4,6 +4,7 @@ import { Settings, Lock, MapPin, Trash2, User, Bell, Database, Eye, EyeOff, LogO
 import { useSettings, TIMEZONES, LOCATIONS, LANGUAGES, CURRENCIES } from '../SettingsContext';
 import { toast } from 'sonner';
 import { updatePreferences, changePassword as changePasswordApi, deleteHistoryBefore, fetchCurrentUser } from '../../utils/apiClient';
+import { updateNotificationSettings } from '../../utils/notificationService';
 
 interface SettingsPageProps {
   onLogout: () => void;
@@ -829,8 +830,25 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                       onChange={(e) => {
                         const next = { ...notifications, [key]: e.target.checked };
                         setNotifications(next);
-                        toast.success('Notification preference updated');
-                        // Persist notification preferences to backend (best-effort)
+                        
+                        // Update notification service in real-time
+                        updateNotificationSettings(next);
+                        
+                        const notifName = key === 'email' ? 'Email Notifications' :
+                                         key === 'alerts' ? 'System Alerts' :
+                                         key === 'reports' ? 'Weekly Reports' :
+                                         key === 'maintenance' ? 'Maintenance Notices' :
+                                         key === 'powerOutage' ? 'Power Outage Alerts' :
+                                         key === 'lowVoltage' ? 'Low Voltage Warnings' :
+                                         key === 'highUsage' ? 'High Usage Alerts' :
+                                         key === 'weeklyReport' ? 'Weekly Summary' : 'Notification';
+                        
+                        toast.success(`${notifName} ${e.target.checked ? 'enabled' : 'disabled'}`, {
+                          description: e.target.checked ? 'You will now receive these notifications' : 'Notifications disabled',
+                          duration: 3000
+                        });
+                        
+                        // Persist notification preferences to backend
                         updatePreferences({ notifications: next }).catch(() => {});
                       }}
                       className="sr-only peer"
