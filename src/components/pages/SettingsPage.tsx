@@ -561,19 +561,18 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-400 text-sm mb-2">{translate('current_password')}</label>
-                <div className="relative">
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
+                <div className="relative flex items-center">
+                  <input
                     type={showCurrentPassword ? 'text' : 'password'}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+                    className="w-full px-4 py-3 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                     placeholder={translate('current_password')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-[50%] -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
+                    className="absolute right-3 text-gray-400 hover:text-white transition-colors duration-200"
                   >
                     {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -582,19 +581,18 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
               
               <div>
                 <label className="block text-gray-400 text-sm mb-2">{translate('new_password')}</label>
-                <div className="relative">
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
+                <div className="relative flex items-center">
+                  <input
                     type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+                    className="w-full px-4 py-3 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                     placeholder={translate('new_password')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-[50%] -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
+                    className="absolute right-3 text-gray-400 hover:text-white transition-colors duration-200"
                   >
                     {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
