@@ -36,9 +36,11 @@ export default function App() {
       setView('dashboard');
       
       // Request location permission after successful login
+      console.log('App.tsx: Scheduling location permission request after login');
       setTimeout(() => {
+        console.log('App.tsx: Triggering location permission request');
         requestLocationPermission();
-      }, 1000);
+      }, 1500);
     } catch (err: any) {
       setView('login');
       toast.error(err?.message || 'Authentication failed');
@@ -54,9 +56,11 @@ export default function App() {
       setView('dashboard');
       
       // Request location permission after successful registration
+      console.log('App.tsx: Scheduling location permission request after registration');
       setTimeout(() => {
+        console.log('App.tsx: Triggering location permission request');
         requestLocationPermission();
-      }, 1000);
+      }, 1500);
     } catch (err: any) {
       setView('login');
       toast.error(err?.message || 'Registration failed');
@@ -64,7 +68,10 @@ export default function App() {
   };
 
   const requestLocationPermission = async () => {
+    console.log('App.tsx: requestLocationPermission called');
     if ('geolocation' in navigator) {
+      console.log('App.tsx: Geolocation is available, requesting permission...');
+      toast.info('Requesting location permission...');
       try {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
