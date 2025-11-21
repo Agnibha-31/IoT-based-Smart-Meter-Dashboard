@@ -419,9 +419,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
       try {
         const parsed = JSON.parse(savedGeo);
         if (typeof parsed?.lat === 'number' && typeof parsed?.lon === 'number') {
+          console.log('SettingsContext: Initial mount - setting geo coords:', parsed);
           setGeoCoords({ lat: parsed.lat, lon: parsed.lon });
         }
-      } catch {}
+      } catch (err) {
+        console.error('SettingsContext: Error parsing initial geo coords:', err);
+      }
+    } else {
+      console.log('SettingsContext: No saved geo coords found on mount');
     }
   }, []);
 
