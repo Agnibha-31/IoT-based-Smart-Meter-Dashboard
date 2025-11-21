@@ -426,10 +426,21 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
 
   useEffect(() => {
     if (!initialSettings) return;
-    if (initialSettings.language) setLanguage(initialSettings.language);
-    if (initialSettings.location) setLocation(initialSettings.location);
-    if (initialSettings.timezone) setTimezone(initialSettings.timezone);
-    if (initialSettings.currency) setCurrency(initialSettings.currency);
+    if (initialSettings.language) setLanguageState(initialSettings.language);
+    if (initialSettings.location) setLocationState(initialSettings.location);
+    if (initialSettings.timezone) setTimezoneState(initialSettings.timezone);
+    if (initialSettings.currency) setCurrencyState(initialSettings.currency);
+    
+    // Check for geo coordinates in localStorage whenever settings change
+    const savedGeo = localStorage.getItem('smartmeter_geo_coords');
+    if (savedGeo) {
+      try {
+        const parsed = JSON.parse(savedGeo);
+        if (typeof parsed?.lat === 'number' && typeof parsed?.lon === 'number') {
+          setGeoCoords({ lat: parsed.lat, lon: parsed.lon });
+        }
+      } catch {}
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSettings?.language, initialSettings?.location, initialSettings?.timezone, initialSettings?.currency]);
 
@@ -528,7 +539,19 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         const json = await res.json();
         const temp = json?.current?.temperature_2m;
         const code = json?.current?.weather_code;
-        const condition = typeof code === 'number' ? `Code ${code}` : 'Clear';
+        
+        // Map WMO weather codes to conditions
+        const weatherCodeMap: Record<number, string> = {
+          0: 'Clear', 1: 'Partly Cloudy', 2: 'Partly Cloudy', 3: 'Cloudy',
+          45: 'Foggy', 48: 'Foggy',
+          51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle',
+          61: 'Rainy', 63: 'Rainy', 65: 'Rainy',
+          71: 'Snowy', 73: 'Snowy', 75: 'Snowy',
+          80: 'Rainy', 81: 'Rainy', 82: 'Rainy',
+          95: 'Stormy', 96: 'Stormy', 99: 'Stormy'
+        };
+        
+        const condition = typeof code === 'number' ? (weatherCodeMap[code] || 'Partly Cloudy') : 'Clear';
         const data = { temperature: typeof temp === 'number' ? Math.round(temp) : 0, condition };
         if (cancelled) return;
         setLiveWeather(data);
