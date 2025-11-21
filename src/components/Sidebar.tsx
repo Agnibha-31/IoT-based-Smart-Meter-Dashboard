@@ -165,17 +165,20 @@ export default function Sidebar({ currentPage, onPageChange, collapsed, onToggle
           )}
         </AnimatePresence>
 
-        {/* Show larger user icon when collapsed */}
+        {/* Show larger user icon with username when collapsed */}
         {collapsed && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="flex items-center justify-center py-1.5"
+            className="flex flex-col items-center justify-center py-1.5 space-y-1"
           >
             <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
               <User className="w-6 h-6 text-white" />
             </div>
+            <p className="text-white text-[10px] font-medium truncate max-w-[50px]" title={user?.username}>
+              {user?.username}
+            </p>
           </motion.div>
         )}
         

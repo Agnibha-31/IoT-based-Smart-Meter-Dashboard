@@ -60,7 +60,12 @@ export default function Header({ wakeUpTime }: HeaderProps) {
           >
             <Clock className="w-5 h-5 text-green-400" />
           </motion.div>
-          <span className="text-green-400 font-medium">{translate('uptime')}: {wakeUpTime}</span>
+          <span className="text-green-400 font-medium">{translate('uptime')}: {(() => {
+            const hours = Math.floor(wakeUpTime / 3600);
+            const minutes = Math.floor((wakeUpTime % 3600) / 60);
+            const seconds = wakeUpTime % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          })()}</span>
         </motion.div>
 
         {/* Date, Time, Location & Weather */}
