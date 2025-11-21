@@ -3,4 +3,6 @@ export default {
     tailwindcss: {},
     autoprefixer: {},
   },
+  // Suppress 'from' option warning
+  map: false,
 }
