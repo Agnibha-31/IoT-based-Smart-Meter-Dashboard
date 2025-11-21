@@ -608,11 +608,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${geoCoords.lat}&longitude=${geoCoords.lon}&current=temperature_2m,weather_code`;
         console.log('SettingsContext: Fetching weather from API:', url);
         const res = await fetch(url);
+        console.log('SettingsContext: API response status:', res.status, res.ok);
         if (!res.ok) throw new Error('weather fetch failed');
         const json = await res.json();
         console.log('SettingsContext: Weather API response:', json);
+        console.log('SettingsContext: json.current:', json?.current);
         const temp = json?.current?.temperature_2m;
         const code = json?.current?.weather_code;
+        console.log('SettingsContext: Extracted temp:', temp, 'code:', code);
         
         // Map WMO weather codes to conditions
         const weatherCodeMap: Record<number, string> = {
