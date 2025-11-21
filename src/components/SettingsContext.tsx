@@ -405,6 +405,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
   // Load saved settings from localStorage on mount (only for language and currency - manual preferences)
   // Location and timezone come from user profile (GPS-based) via initialSettings
   useEffect(() => {
+    // Clear old location/timezone from localStorage if they exist (migration cleanup)
+    localStorage.removeItem('smartmeter_location');
+    localStorage.removeItem('smartmeter_timezone');
+    
     const savedLanguage = localStorage.getItem('smartmeter_language');
     const savedCurrency = localStorage.getItem('smartmeter_currency');
     const savedGeo = localStorage.getItem('smartmeter_geo_coords');
