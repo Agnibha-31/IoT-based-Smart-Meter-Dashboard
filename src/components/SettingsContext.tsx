@@ -630,8 +630,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         
         const condition = typeof code === 'number' ? (weatherCodeMap[code] || 'Partly Cloudy') : 'Clear';
         const data = { temperature: typeof temp === 'number' ? Math.round(temp) : 0, condition };
-        if (cancelled) return;
         console.log('SettingsContext: Setting live weather:', data);
+        console.log('SettingsContext: Cancelled flag before setState:', cancelled);
+        // Don't check cancelled flag here - we want to update state with the fetched data
         setLiveWeather(data);
         // Store cache with coordinates to ensure we don't use old location's weather
         localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data, coords: geoCoords }));
