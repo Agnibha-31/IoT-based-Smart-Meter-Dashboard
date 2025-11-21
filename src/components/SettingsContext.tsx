@@ -494,7 +494,17 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
   };
 
   const getLocationName = (): string => {
-    return LOCATIONS.find(loc => loc.code === location)?.name || 'Unknown Location';
+    // First try to find by code (for backward compatibility with preset locations)
+    const found = LOCATIONS.find(loc => loc.code === location);
+    if (found) return found.name;
+    
+    // If no code match, check if location is already a display string (e.g., from GPS)
+    // Location from GPS will be like "City, State, Country" or "City, Country"
+    if (location && location.includes(',')) {
+      return location;
+    }
+    
+    return location || 'Unknown Location';
   };
 
   // Fetch live weather using Open-Meteo if geo coordinates are available
@@ -529,7 +539,27 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
   }, [geoCoords]);
 
   const getWeatherData = () => {
-    return liveWeather || (WEATHER_DATA as any)[location] || WEATHER_DATA.default;
+    // Prioritize live weather if available
+    if (liveWeather) return liveWeather;
+    
+    // Try location code lookup for static weather data
+    const staticWeather = (WEATHER_DATA as any)[location];
+    if (staticWeather) return staticWeather;
+    
+    // If location is a GPS string like "New York, New York, United States",
+    // try to match it to a location code in WEATHER_DATA
+    if (location && location.includes(',')) {
+      const cityPart = location.split(',')[0].trim();
+      // Try to find matching location code by city name
+      const matchedLocation = LOCATIONS.find(loc => 
+        loc.name.toLowerCase().includes(cityPart.toLowerCase())
+      );
+      if (matchedLocation && (WEATHER_DATA as any)[matchedLocation.code]) {
+        return (WEATHER_DATA as any)[matchedLocation.code];
+      }
+    }
+    
+    return WEATHER_DATA.default;
   };
 
   const getCurrencyInfo = () => {

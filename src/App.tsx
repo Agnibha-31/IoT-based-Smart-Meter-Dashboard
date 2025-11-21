@@ -173,6 +173,9 @@ export default function App() {
         return;
       }
       
+      // Store GPS coordinates in localStorage for live weather
+      localStorage.setItem('smartmeter_geo_coords', JSON.stringify({ lat: latitude, lon: longitude }));
+      
       const updateResponse = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/preferences`, {
         method: 'PATCH',
         headers: {
