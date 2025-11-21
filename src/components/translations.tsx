@@ -242,6 +242,13 @@ export const TRANSLATIONS = {
     '10_seconds': '10 Seconds',
     '30_seconds': '30 Seconds',
     '1_minute': '1 Minute',
+    '7_days_retention': '7 Days',
+    '30_days_retention': '30 Days',
+    '90_days_retention': '90 Days',
+    '6_months': '6 Months',
+    '1_year': '1 Year',
+    '2_years': '2 Years',
+    'forever': 'Forever',
   },
   
   es: {
@@ -486,6 +493,13 @@ export const TRANSLATIONS = {
     '10_seconds': '10 Segundos',
     '30_seconds': '30 Segundos',
     '1_minute': '1 Minuto',
+    '7_days_retention': '7 Días',
+    '30_days_retention': '30 Días',
+    '90_days_retention': '90 Días',
+    '6_months': '6 Meses',
+    '1_year': '1 Año',
+    '2_years': '2 Años',
+    'forever': 'Para Siempre',
   },
   
   fr: {
@@ -729,6 +743,13 @@ export const TRANSLATIONS = {
     '10_seconds': '10 Secondes',
     '30_seconds': '30 Secondes',
     '1_minute': '1 Minute',
+    '7_days_retention': '7 Jours',
+    '30_days_retention': '30 Jours',
+    '90_days_retention': '90 Jours',
+    '6_months': '6 Mois',
+    '1_year': '1 An',
+    '2_years': '2 Ans',
+    'forever': 'Toujours',
   },
   
   de: {
@@ -893,6 +914,13 @@ export const TRANSLATIONS = {
     '10_seconds': '10 Sekunden',
     '30_seconds': '30 Sekunden',
     '1_minute': '1 Minute',
+    '7_days_retention': '7 Tage',
+    '30_days_retention': '30 Tage',
+    '90_days_retention': '90 Tage',
+    '6_months': '6 Monate',
+    '1_year': '1 Jahr',
+    '2_years': '2 Jahre',
+    'forever': 'Für Immer',
   },  // Italian
   it: {
     'smart_meter_dashboard': 'Cruscotto Contatore Intelligente',

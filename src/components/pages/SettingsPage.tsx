@@ -164,13 +164,13 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
   }, [refreshRate]);
 
   const retentionOptions = [
-    { value: '7days', label: '7 Days' },
-    { value: '30days', label: '30 Days' },
-    { value: '90days', label: '90 Days' },
-    { value: '6months', label: '6 Months' },
-    { value: '1year', label: '1 Year' },
-    { value: '2years', label: '2 Years' },
-    { value: 'forever', label: 'Forever' }
+    { value: '7days', label: translate('7_days_retention') },
+    { value: '30days', label: translate('30_days_retention') },
+    { value: '90days', label: translate('90_days_retention') },
+    { value: '6months', label: translate('6_months') },
+    { value: '1year', label: translate('1_year') },
+    { value: '2years', label: translate('2_years') },
+    { value: 'forever', label: translate('forever') }
   ];
 
   const retentionDurations: Record<string, number | null> = {
