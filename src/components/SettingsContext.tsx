@@ -443,6 +443,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
     
     // Check for geo coordinates in localStorage whenever settings change
     const savedGeo = localStorage.getItem('smartmeter_geo_coords');
+    console.log('SettingsContext: Checking for saved geo coords:', savedGeo);
     if (savedGeo) {
       try {
         const parsed = JSON.parse(savedGeo);
@@ -450,7 +451,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
           console.log('SettingsContext: Setting geo coords:', parsed);
           setGeoCoords({ lat: parsed.lat, lon: parsed.lon });
         }
-      } catch {}
+      } catch (err) {
+        console.error('SettingsContext: Error parsing geo coords:', err);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSettings?.language, initialSettings?.location, initialSettings?.timezone, initialSettings?.currency]);
@@ -511,9 +514,22 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
     const now = new Date();
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
     let offset = TIMEZONES.find(tz => tz.code === timezone)?.offset;
-    if (offset === undefined && timezone.includes('/')) {
-      offset = IANA_OFFSETS[timezone] ?? 0;
+    
+    // If not found in TIMEZONES array, try to parse the timezone string directly
+    if (offset === undefined) {
+      if (timezone.includes('/')) {
+        // IANA timezone format (e.g., 'Asia/Kolkata')
+        offset = IANA_OFFSETS[timezone] ?? 0;
+      } else if (timezone.startsWith('UTC')) {
+        // Parse UTC offset format (e.g., 'UTC+5.5', 'UTC-5', 'UTC+0')
+        const match = timezone.match(/UTC([+-]?)(\d+(?:\.\d+)?)/);
+        if (match) {
+          const sign = match[1] === '-' ? -1 : 1;
+          offset = sign * parseFloat(match[2]);
+        }
+      }
     }
+    
     console.log('SettingsContext: getCurrentTime - timezone:', timezone, 'offset:', offset);
     return new Date(utc + (Number(offset || 0) * 3600000));
   };
