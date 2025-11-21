@@ -891,7 +891,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   <Trash2 className="w-5 h-5 text-red-400 mt-1" />
                   <div>
                     <h4 className="text-white font-medium">{translate('delete_historical_data')}</h4>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-gray-300 text-sm">
                       This will permanently delete all stored meter readings and historical data.
                     </p>
                   </div>
@@ -940,17 +940,6 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
               </div>
             </div>
           </div>
-
-          {/* Sign Out */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center space-x-3 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Sign Out</span>
-          </motion.button>
         </motion.div>
       </div>
     </motion.div>
