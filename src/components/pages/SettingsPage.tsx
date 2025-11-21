@@ -229,15 +229,23 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
     setIsChangingPassword(true);
     changePasswordApi(currentPassword, newPassword)
       .then(() => {
-        toast.success(translate('password_updated'));
+        toast.success('Password updated successfully! Logging out...', {
+          description: 'Please login again with your new password',
+          duration: 3000
+        });
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
+        
+        // Log out user after 2 seconds
+        setTimeout(() => {
+          onLogout();
+        }, 2000);
       })
       .catch((error: any) => {
         toast.error(error?.message || 'Unable to update password');
-      })
-      .finally(() => setIsChangingPassword(false));
+        setIsChangingPassword(false);
+      });
   };
 
   const handleLocationChange = (newLocation: string) => {
