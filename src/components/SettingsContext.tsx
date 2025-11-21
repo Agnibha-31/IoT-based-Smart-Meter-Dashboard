@@ -427,9 +427,18 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
 
   useEffect(() => {
     if (!initialSettings) return;
+    
+    console.log('SettingsContext: Received initialSettings:', initialSettings);
+    
     if (initialSettings.language) setLanguageState(initialSettings.language);
-    if (initialSettings.location) setLocationState(initialSettings.location);
-    if (initialSettings.timezone) setTimezoneState(initialSettings.timezone);
+    if (initialSettings.location) {
+      console.log('SettingsContext: Setting location to:', initialSettings.location);
+      setLocationState(initialSettings.location);
+    }
+    if (initialSettings.timezone) {
+      console.log('SettingsContext: Setting timezone to:', initialSettings.timezone);
+      setTimezoneState(initialSettings.timezone);
+    }
     if (initialSettings.currency) setCurrencyState(initialSettings.currency);
     
     // Check for geo coordinates in localStorage whenever settings change
@@ -438,6 +447,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
       try {
         const parsed = JSON.parse(savedGeo);
         if (typeof parsed?.lat === 'number' && typeof parsed?.lon === 'number') {
+          console.log('SettingsContext: Setting geo coords:', parsed);
           setGeoCoords({ lat: parsed.lat, lon: parsed.lon });
         }
       } catch {}
@@ -508,16 +518,23 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
   };
 
   const getLocationName = (): string => {
+    console.log('SettingsContext: getLocationName called, current location state:', location);
+    
     // First try to find by code (for backward compatibility with preset locations)
     const found = LOCATIONS.find(loc => loc.code === location);
-    if (found) return found.name;
+    if (found) {
+      console.log('SettingsContext: Found location by code:', found.name);
+      return found.name;
+    }
     
     // If no code match, check if location is already a display string (e.g., from GPS)
     // Location from GPS will be like "City, State, Country" or "City, Country"
     if (location && location.includes(',')) {
+      console.log('SettingsContext: Using GPS location string:', location);
       return location;
     }
     
+    console.log('SettingsContext: Returning fallback location');
     return location || 'Unknown Location';
   };
 

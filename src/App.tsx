@@ -252,17 +252,17 @@ export default function App() {
     setView('login');
   };
 
-  const initialSettings = React.useMemo(() => 
-    user
+  const initialSettings = React.useMemo(() => {
+    console.log('App.tsx: Creating initialSettings from user:', user);
+    return user
       ? {
           language: user.language,
           timezone: user.timezone,
           currency: user.currency,
           location: user.location,
         }
-      : undefined,
-    [user?.language, user?.timezone, user?.currency, user?.location]
-  );
+      : undefined;
+  }, [user?.language, user?.timezone, user?.currency, user?.location]);
 
   return (
     <SettingsProvider key={`${user?.timezone}-${user?.location}`} initialSettings={initialSettings}>
