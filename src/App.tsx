@@ -226,7 +226,8 @@ export default function App() {
             setUser({
               ...freshUser.user,
               timezone: mappedTimezone,
-              location: locationString
+              location: locationString,
+              currency: mappedCurrency
             });
             
             // Force complete state update by setting user to null briefly then back
@@ -234,7 +235,7 @@ export default function App() {
             setUser(null);
             setTimeout(() => {
               setUser(currentUser);
-              toast.success(`Location updated!\n${locationString}\nTimezone: ${mappedTimezone}`, {
+              toast.success(`Location updated!\n${locationString}\nTimezone: ${mappedTimezone}\nCurrency: ${mappedCurrency}`, {
                 duration: 5000
               });
               
@@ -250,9 +251,10 @@ export default function App() {
           setUser({
             ...user,
             timezone: mappedTimezone,
-            location: locationString
+            location: locationString,
+            currency: mappedCurrency
           });
-          toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}`);
+          toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}\nCurrency: ${mappedCurrency}`);
           
           // Reload to ensure update
           setTimeout(() => {
