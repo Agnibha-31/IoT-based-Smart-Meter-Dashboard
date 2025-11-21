@@ -574,16 +574,27 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
       try {
         const cacheKey = 'smartmeter_weather_cache';
         const cached = localStorage.getItem(cacheKey);
+        console.log('SettingsContext: Weather cache value:', cached);
         if (cached) {
-          const { ts, data, coords } = JSON.parse(cached);
-          // Check if cache is for the same coordinates and within 15 minutes
-          if (coords?.lat === geoCoords.lat && coords?.lon === geoCoords.lon && Date.now() - ts < 15 * 60 * 1000) {
-            console.log('SettingsContext: Using cached weather:', data);
-            setLiveWeather(data);
-            return;
-          } else {
-            console.log('SettingsContext: Cache is for different location or expired, fetching fresh data');
+          try {
+            const { ts, data, coords } = JSON.parse(cached);
+            console.log('SettingsContext: Parsed cache - ts:', ts, 'coords:', coords, 'data:', data);
+            console.log('SettingsContext: Current coords:', geoCoords);
+            console.log('SettingsContext: Coords match:', coords?.lat === geoCoords.lat && coords?.lon === geoCoords.lon);
+            console.log('SettingsContext: Cache age (ms):', Date.now() - ts);
+            // Check if cache is for the same coordinates and within 15 minutes
+            if (coords?.lat === geoCoords.lat && coords?.lon === geoCoords.lon && Date.now() - ts < 15 * 60 * 1000) {
+              console.log('SettingsContext: Using cached weather:', data);
+              setLiveWeather(data);
+              return;
+            } else {
+              console.log('SettingsContext: Cache is for different location or expired, fetching fresh data');
+            }
+          } catch (parseError) {
+            console.error('SettingsContext: Error parsing cache:', parseError);
           }
+        } else {
+          console.log('SettingsContext: No cache found, will fetch fresh data');
         }
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${geoCoords.lat}&longitude=${geoCoords.lon}&current=temperature_2m,weather_code`;
         console.log('SettingsContext: Fetching weather from API:', url);
