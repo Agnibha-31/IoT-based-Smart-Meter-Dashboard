@@ -167,11 +167,23 @@ export default function App() {
         'RU': 'GMT+3:00',     // Moscow
       };
       
+      // Map currency based on country
+      const countryCurrencies: Record<string, string> = {
+        'US': 'USD', 'CA': 'CAD', 'GB': 'GBP', 'IE': 'EUR',
+        'FR': 'EUR', 'DE': 'EUR', 'ES': 'EUR', 'IT': 'EUR',
+        'IN': 'INR', 'CN': 'CNY', 'JP': 'JPY', 'AU': 'AUD',
+        'NZ': 'NZD', 'BR': 'BRL', 'AR': 'ARS', 'AE': 'AED',
+        'SA': 'SAR', 'RU': 'RUB',
+      };
+      
       if (countryCode && countryTimezones[countryCode]) {
         mappedTimezone = countryTimezones[countryCode];
       }
       
+      const mappedCurrency = countryCurrencies[countryCode] || 'USD';
+      
       console.log('Detected timezone:', mappedTimezone);
+      console.log('Detected currency:', mappedCurrency);
       
       // Update user settings via API
       const token = localStorage.getItem('access_token');
@@ -191,7 +203,8 @@ export default function App() {
         },
         body: JSON.stringify({
           timezone: mappedTimezone,
-          location: locationString
+          location: locationString,
+          currency: mappedCurrency
         })
       });
       

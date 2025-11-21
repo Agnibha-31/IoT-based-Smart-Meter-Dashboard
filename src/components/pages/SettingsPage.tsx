@@ -347,19 +347,31 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
         'SA': 'GMT+3:00', 'RU': 'GMT+3:00',
       };
 
+      // Map currency based on country
+      const countryCurrencies: Record<string, string> = {
+        'US': 'USD', 'CA': 'CAD', 'GB': 'GBP', 'IE': 'EUR',
+        'FR': 'EUR', 'DE': 'EUR', 'ES': 'EUR', 'IT': 'EUR',
+        'IN': 'INR', 'CN': 'CNY', 'JP': 'JPY', 'AU': 'AUD',
+        'NZ': 'NZD', 'BR': 'BRL', 'AR': 'ARS', 'AE': 'AED',
+        'SA': 'SAR', 'RU': 'RUB',
+      };
+
       const mappedTimezone = countryTimezones[countryCode] || 'GMT+0:00';
+      const mappedCurrency = countryCurrencies[countryCode] || 'USD';
 
       // Update backend
       await persistPreferences({
         timezone: mappedTimezone,
-        location: locationString
+        location: locationString,
+        currency: mappedCurrency
       });
 
       // Update local state
       setLocation(locationString);
       setTimezone(mappedTimezone);
+      setCurrency(mappedCurrency);
 
-      toast.success(`Location updated!\n${locationString}\nTimezone: ${mappedTimezone}`, {
+      toast.success(`Location updated!\n${locationString}\nTimezone: ${mappedTimezone}\nCurrency: ${mappedCurrency}`, {
         duration: 5000
       });
 
