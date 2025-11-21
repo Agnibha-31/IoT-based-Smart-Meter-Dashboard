@@ -302,6 +302,9 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
 
       // Store GPS coordinates in localStorage
       localStorage.setItem('smartmeter_geo_coords', JSON.stringify({ lat: latitude, lon: longitude }));
+      
+      // Clear weather cache to force fresh fetch
+      localStorage.removeItem('smartmeter_weather_cache');
 
       // Get location details from reverse geocoding
       toast.info('Getting location details...');

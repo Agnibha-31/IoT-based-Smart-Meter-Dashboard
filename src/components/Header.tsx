@@ -8,10 +8,10 @@ interface HeaderProps {
 }
 
 export default function Header({ wakeUpTime }: HeaderProps) {
-  const { getCurrentTime, getLocationName, getWeatherData, translate } = useSettings();
+  const { getCurrentTime, getLocationName, getWeatherData, translate, timezone, location: settingsLocation } = useSettings();
   const [currentTime, setCurrentTime] = useState(getCurrentTime());
-  const location = getLocationName();
-  const weather = getWeatherData();
+  const [location, setLocation] = useState(getLocationName());
+  const [weather, setWeather] = useState(getWeatherData());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,6 +20,12 @@ export default function Header({ wakeUpTime }: HeaderProps) {
 
     return () => clearInterval(timer);
   }, [getCurrentTime]);
+
+  // Update location and weather when settings change
+  useEffect(() => {
+    setLocation(getLocationName());
+    setWeather(getWeatherData());
+  }, [settingsLocation, timezone, getLocationName, getWeatherData]);
 
   const getWeatherIcon = (condition: string) => {
     switch (condition) {
