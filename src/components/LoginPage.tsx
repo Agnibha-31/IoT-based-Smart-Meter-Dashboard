@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Shield, Database } from 'lucide-react';
+import { Zap, Shield, Database, Eye, EyeOff } from 'lucide-react';
 import { useSettings } from './SettingsContext';
 
 interface LoginProps {
@@ -22,6 +22,8 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const [nameFocused, setNameFocused] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const debounceTimer = useRef<number | null>(null);
   const lastTried = useRef<{ email: string; password: string } | null>(null);
 
@@ -134,7 +136,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     }
     debounceTimer.current = window.setTimeout(() => {
       void handleSubmit();
-    }, 700);
+    }, 1500);
     return () => {
       if (debounceTimer.current) {
         window.clearTimeout(debounceTimer.current);
@@ -302,10 +304,9 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             
             <div className="relative">
               <label className="block text-white/90 text-sm mb-2 text-center">{isFirstTimeUser ? 'Create Password' : translate('password')}</label>
-              <div className="relative w-4/5 mx-auto">
-                <motion.input
-                  whileFocus={{ scale: 1.02 }}
-                  type="password"
+              <div className="relative w-4/5 mx-auto flex items-center">
+                <input
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => {
@@ -316,18 +317,26 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
-                  style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
+                  style={{ paddingLeft: '2.0rem', paddingRight: isFirstTimeUser ? '3.5rem' : '3.0rem' }}
                   className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !emailValidation.isValid ? 'pointer-events-none' : ''}`}
                   placeholder={passwordFocused || password ? '' : 'Enter your password'}
                   autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
                   disabled={isFirstTimeUser ? !emailValidation.isValid : false}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-white/60 hover:text-white transition-colors duration-200"
+                  style={{ right: isFirstTimeUser && password ? '2.5rem' : '0.75rem' }}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
                 {isFirstTimeUser && password && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center"
+                    className="absolute right-3 flex items-center justify-center"
                   >
                     {isPasswordValid ? (
                       <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -379,20 +388,27 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             {isFirstTimeUser && (
               <div className="relative">
                 <label className="block text-white/90 text-sm mb-2 text-center">Confirm Password</label>
-                <div className="relative w-4/5 mx-auto">
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="password"
+                <div className="relative w-4/5 mx-auto flex items-center">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
-                    style={{ paddingLeft: '2.0rem', paddingRight: '1.0rem' }}
+                    style={{ paddingLeft: '2.0rem', paddingRight: '3.5rem' }}
                     className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${!isPasswordValid ? 'pointer-events-none' : ''}`}
                     placeholder={confirmPasswordFocused || confirmPassword ? '' : 'Re-enter your password'}
                     autoComplete="new-password"
                     disabled={!isPasswordValid}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute text-white/60 hover:text-white transition-colors duration-200"
+                    style={{ right: confirmPassword ? '2.5rem' : '0.75rem' }}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                   {confirmPassword && (
                     <motion.div 
                       initial={{ scale: 0 }}
