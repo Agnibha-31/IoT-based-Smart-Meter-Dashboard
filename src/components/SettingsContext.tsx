@@ -606,7 +606,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         }
         
         // Using OpenWeatherMap API - Same accuracy as Google Weather
-        const apiKey = '2e848c3f88769f52edd7d7be37bb762a';
+        const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY || '2e848c3f88769f52edd7d7be37bb762a';
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${geoCoords.lat}&lon=${geoCoords.lon}&appid=${apiKey}&units=metric`;
         console.log('SettingsContext: Fetching weather from OpenWeatherMap:', url);
         const res = await fetch(url);
