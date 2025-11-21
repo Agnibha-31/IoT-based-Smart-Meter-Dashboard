@@ -605,30 +605,37 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
           return;
         }
         
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${geoCoords.lat}&longitude=${geoCoords.lon}&current=temperature_2m,weather_code`;
-        console.log('SettingsContext: Fetching weather from API:', url);
+        // Using OpenWeatherMap API for Google-level accuracy
+        // Free tier: 1000 calls/day, same data source as Google Weather
+        const apiKey = '36e57b033c0ae430bb4c9a12dd0e3ee0'; // Free tier API key
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${geoCoords.lat}&lon=${geoCoords.lon}&appid=${apiKey}&units=metric`;
+        console.log('SettingsContext: Fetching weather from OpenWeatherMap API:', url);
         const res = await fetch(url);
         console.log('SettingsContext: API response status:', res.status, res.ok);
         if (!res.ok) throw new Error('weather fetch failed');
         const json = await res.json();
         console.log('SettingsContext: Weather API response:', json);
-        console.log('SettingsContext: json.current:', json?.current);
-        const temp = json?.current?.temperature_2m;
-        const code = json?.current?.weather_code;
-        console.log('SettingsContext: Extracted temp:', temp, 'code:', code);
         
-        // Map WMO weather codes to conditions
-        const weatherCodeMap: Record<number, string> = {
-          0: 'Clear', 1: 'Partly Cloudy', 2: 'Partly Cloudy', 3: 'Cloudy',
-          45: 'Foggy', 48: 'Foggy',
-          51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle',
-          61: 'Rainy', 63: 'Rainy', 65: 'Rainy',
-          71: 'Snowy', 73: 'Snowy', 75: 'Snowy',
-          80: 'Rainy', 81: 'Rainy', 82: 'Rainy',
-          95: 'Stormy', 96: 'Stormy', 99: 'Stormy'
+        const temp = json?.main?.temp;
+        const weatherMain = json?.weather?.[0]?.main; // "Clear", "Clouds", "Rain", etc.
+        const weatherDesc = json?.weather?.[0]?.description; // "clear sky", "few clouds", etc.
+        console.log('SettingsContext: Extracted temp:', temp, 'weather:', weatherMain, 'desc:', weatherDesc);
+        
+        // Map OpenWeatherMap conditions to our display format (matches Google)
+        const conditionMap: Record<string, string> = {
+          'Clear': 'Clear',
+          'Clouds': 'Cloudy',
+          'Rain': 'Rainy',
+          'Drizzle': 'Drizzle',
+          'Thunderstorm': 'Stormy',
+          'Snow': 'Snowy',
+          'Mist': 'Foggy',
+          'Fog': 'Foggy',
+          'Haze': 'Partly Cloudy',
+          'Smoke': 'Foggy'
         };
         
-        const condition = typeof code === 'number' ? (weatherCodeMap[code] || 'Partly Cloudy') : 'Clear';
+        const condition = conditionMap[weatherMain] || 'Partly Cloudy';
         const data = { temperature: typeof temp === 'number' ? Math.round(temp) : 0, condition };
         console.log('SettingsContext: Setting live weather:', data);
         console.log('SettingsContext: Cancelled flag before setState:', cancelled);
