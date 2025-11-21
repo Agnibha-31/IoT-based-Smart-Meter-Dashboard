@@ -195,25 +195,47 @@ export default function App() {
       console.log('Profile updated successfully:', updatedData);
       
       if (updatedData.user) {
-        // Update user state with new timezone and location
-        const newUser = {
-          ...user,
-          timezone: updatedData.user.timezone,
-          location: updatedData.user.location
-        };
-        setUser(newUser);
-        
-        // Force a re-render by fetching fresh user data
-        setTimeout(async () => {
-          try {
-            const freshUser = await fetchCurrentUser();
-            setUser(freshUser.user);
-            toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}`);
-          } catch (err) {
-            console.error('Failed to refresh user data:', err);
-            toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}`);
+        // Fetch fresh user data from backend to ensure complete sync
+        try {
+          const freshUser = await fetchCurrentUser();
+          if (freshUser.user) {
+            // Update user state which will trigger SettingsProvider update via key prop
+            setUser({
+              ...freshUser.user,
+              timezone: mappedTimezone,
+              location: locationString
+            });
+            
+            // Force complete state update by setting user to null briefly then back
+            const currentUser = freshUser.user;
+            setUser(null);
+            setTimeout(() => {
+              setUser(currentUser);
+              toast.success(`Location updated!\n${locationString}\nTimezone: ${mappedTimezone}`, {
+                duration: 5000
+              });
+              
+              // Reload the page to ensure all components update
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            }, 100);
           }
-        }, 500);
+        } catch (err) {
+          console.error('Failed to refresh user data:', err);
+          // Still update local state even if refresh fails
+          setUser({
+            ...user,
+            timezone: mappedTimezone,
+            location: locationString
+          });
+          toast.success(`Location updated: ${locationString}\nTimezone: ${mappedTimezone}`);
+          
+          // Reload to ensure update
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        }
       }
     } catch (error) {
       console.error('Failed to update location-based settings:', error);
