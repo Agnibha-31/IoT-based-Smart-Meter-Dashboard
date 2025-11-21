@@ -146,39 +146,42 @@ export default function Sidebar({ currentPage, onPageChange, collapsed, onToggle
 
       {/* User Profile & Logout */}
       <div className="p-2 border-t border-slate-700 space-y-1.5">
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="flex items-center space-x-3 p-3 bg-slate-700 rounded-lg"
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-medium">{user?.username}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* User Profile - Always show with username beside icon */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} p-3 bg-slate-700 rounded-lg`}
+        >
+          <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <User className="w-5 h-5 text-white" />
+          </div>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="flex-1 min-w-0"
+              >
+                <p className="text-white font-medium truncate">{user?.username}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-        {/* Show larger user icon with username when collapsed */}
+        {/* Show user icon when collapsed */}
         {collapsed && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="flex flex-col items-center justify-center py-1.5 space-y-1"
+            className="flex items-center justify-center py-1.5"
           >
             <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
               <User className="w-6 h-6 text-white" />
             </div>
-            <p className="text-white text-[10px] font-medium truncate max-w-[50px]" title={user?.username}>
-              {user?.username}
-            </p>
           </motion.div>
         )}
         
