@@ -402,17 +402,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
   const [geoCoords, setGeoCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [liveWeather, setLiveWeather] = useState<{ temperature: number; condition: string } | null>(null);
 
-  // Load saved settings from localStorage on mount
+  // Load saved settings from localStorage on mount (only for language and currency - manual preferences)
+  // Location and timezone come from user profile (GPS-based) via initialSettings
   useEffect(() => {
     const savedLanguage = localStorage.getItem('smartmeter_language');
-    const savedLocation = localStorage.getItem('smartmeter_location');
-    const savedTimezone = localStorage.getItem('smartmeter_timezone');
     const savedCurrency = localStorage.getItem('smartmeter_currency');
     const savedGeo = localStorage.getItem('smartmeter_geo_coords');
 
     if (savedLanguage) setLanguageState(savedLanguage);
-    if (savedLocation) setLocationState(savedLocation);
-    if (savedTimezone) setTimezoneState(savedTimezone);
     if (savedCurrency) setCurrencyState(savedCurrency);
     if (savedGeo) {
       try {
@@ -451,12 +448,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
 
   const setLocation = (loc: string) => {
     setLocationState(loc);
-    localStorage.setItem('smartmeter_location', loc);
+    // Don't save to localStorage - location comes from user profile (GPS-based)
+    // localStorage.setItem('smartmeter_location', loc);
   };
 
   const setTimezone = (tz: string) => {
     setTimezoneState(tz);
-    localStorage.setItem('smartmeter_timezone', tz);
+    // Don't save to localStorage - timezone comes from user profile (GPS-based)
+    // localStorage.setItem('smartmeter_timezone', tz);
   };
 
   const setCurrency = (curr: string) => {
