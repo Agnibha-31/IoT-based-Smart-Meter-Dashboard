@@ -628,6 +628,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
       }
     };
     fetchWeather();
+    return () => {
+      cancelled = true;
+      console.log('SettingsContext: Weather fetch cleanup, cancelled:', cancelled);
+    };
   }, [geoCoords]);
 
   const getWeatherData = () => {
