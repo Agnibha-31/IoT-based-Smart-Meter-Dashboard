@@ -573,7 +573,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-[50%] -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
                   >
                     {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -594,7 +594,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-[50%] -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
                   >
                     {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
