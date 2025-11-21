@@ -570,11 +570,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         const cacheKey = 'smartmeter_weather_cache';
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
-          const { ts, data } = JSON.parse(cached);
-          if (Date.now() - ts < 15 * 60 * 1000) {
+          const { ts, data, coords } = JSON.parse(cached);
+          // Check if cache is for the same coordinates and within 15 minutes
+          if (coords?.lat === geoCoords.lat && coords?.lon === geoCoords.lon && Date.now() - ts < 15 * 60 * 1000) {
             console.log('SettingsContext: Using cached weather:', data);
             setLiveWeather(data);
             return;
+          } else {
+            console.log('SettingsContext: Cache is for different location or expired, fetching fresh data');
           }
         }
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${geoCoords.lat}&longitude=${geoCoords.lon}&current=temperature_2m,weather_code`;
@@ -602,7 +605,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children, in
         if (cancelled) return;
         console.log('SettingsContext: Setting live weather:', data);
         setLiveWeather(data);
-        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+        // Store cache with coordinates to ensure we don't use old location's weather
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data, coords: geoCoords }));
       } catch (error) {
         console.error('SettingsContext: Weather fetch error:', error);
       }
