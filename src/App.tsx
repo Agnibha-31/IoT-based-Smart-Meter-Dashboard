@@ -34,6 +34,11 @@ export default function App() {
       const result = await apiLogin(email, password);
       setUser(result.user);
       setView('dashboard');
+      
+      // Request location permission after successful login
+      setTimeout(() => {
+        requestLocationPermission();
+      }, 1000);
     } catch (err: any) {
       setView('login');
       toast.error(err?.message || 'Authentication failed');
