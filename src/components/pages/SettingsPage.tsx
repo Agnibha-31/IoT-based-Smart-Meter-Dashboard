@@ -619,7 +619,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
             >
               <Save className="w-4 h-4" />
               <span className="text-sm">
-                {isSavingPreferences ? 'Saving...' : 'Save Changes'}
+                {isSavingPreferences ? translate('saving') : translate('save_changes')}
               </span>
             </motion.button>
           )}
@@ -715,7 +715,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   placeholder={translate('confirm_password')}
                 />
                 {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+                  <p className="text-red-400 text-xs mt-1">{translate('passwords_not_match')}</p>
                 )}
               </div>
               
@@ -726,7 +726,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                 disabled={isChangingPassword || !currentPassword || !isPasswordValid || newPassword !== confirmPassword}
                 className="w-full py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isChangingPassword ? 'Updating...' : translate('update_password')}
+                {isChangingPassword ? translate('updating') : translate('update_password')}
               </motion.button>
             </div>
           </div>
@@ -735,7 +735,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center space-x-3 mb-6">
               <Globe className="w-5 h-5 text-blue-400" />
-              <h3 className="text-white text-lg font-medium">Location & Currency</h3>
+              <h3 className="text-white text-lg font-medium">{translate('location_currency')}</h3>
             </div>
             
             <div className="space-y-4">
@@ -751,17 +751,17 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   className="mt-2 w-full py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                 >
                   <MapPin className="w-4 h-4" />
-                  <span>Use Current Location (GPS)</span>
+                  <span>{translate('use_current_location')}</span>
                 </motion.button>
               </div>
               
               <div>
                 <label className="block text-gray-400 text-sm mb-2">{translate('timezone')}</label>
                 <div className="text-white px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg">
-                  {timezone ? `${timezone} (Auto-detected)` : 'Not set'}
+                  {timezone ? `${timezone} (${translate('auto_detected')})` : translate('not_set')}
                 </div>
                 <p className="text-gray-400 text-xs mt-1">
-                  Timezone is automatically set based on your GPS location
+                  {translate('timezone_auto_message')}
                 </p>
               </div>
               
@@ -780,7 +780,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
               </div>
               
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Currency</label>
+                <label className="block text-gray-400 text-sm mb-2">{translate('currency')}</label>
                 <motion.select
                   whileFocus={{ scale: 1.02 }}
                   value={currency}
@@ -793,7 +793,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                 </motion.select>
                 <div className="mt-2 flex items-center space-x-2 text-sm text-gray-400">
                   <DollarSign className="w-4 h-4" />
-                  <span>Current: {currencyInfo.symbol} {currencyInfo.name}</span>
+                  <span>{translate('current_currency')} {currencyInfo.symbol} {currencyInfo.name}</span>
                 </div>
               </div>
             </div>
@@ -877,13 +877,13 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Theme</label>
+                <label className="block text-gray-400 text-sm mb-2">{translate('theme')}</label>
                 <motion.select
                   whileFocus={{ scale: 1.02 }}
                   value={theme}
                   onChange={(e) => {
                     setTheme(e.target.value);
-                    toast.success(`Theme changed to ${e.target.value}`);
+                    toast.success(`${translate('theme_changed')} ${e.target.value}`);
                     // Persist theme to backend (best-effort)
                     updatePreferences({ theme: e.target.value }).catch(() => {});
                   }}
@@ -896,13 +896,13 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
               </div>
               
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Data Refresh Rate</label>
+                <label className="block text-gray-400 text-sm mb-2">{translate('data_refresh_rate')}</label>
                 <motion.select
                   whileFocus={{ scale: 1.02 }}
                   value={refreshRate}
                   onChange={(e) => {
                     setRefreshRate(e.target.value);
-                    toast.success(`Refresh rate set to ${e.target.value} second(s)`);
+                    toast.success(`${translate('refresh_rate_set')} ${e.target.value} ${translate('seconds')}`);
                     const rr = parseInt(e.target.value, 10);
                     if (rr > 0) updatePreferences({ refresh_rate: rr }).catch(() => {});
                   }}
@@ -915,14 +915,14 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
               </div>
               
               <div className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
-                <span className="text-white text-sm">Auto-save Settings</span>
+                <span className="text-white text-sm">{translate('auto_save_settings')}</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={autoSave}
                     onChange={(e) => {
                       setAutoSave(e.target.checked);
-                      toast.success(e.target.checked ? 'Auto-save enabled' : 'Auto-save disabled');
+                      toast.success(e.target.checked ? translate('auto_save_enabled') : translate('auto_save_disabled'));
                       updatePreferences({ autosave: e.target.checked }).catch(() => {});
                     }}
                     className="sr-only peer"
@@ -966,7 +966,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   onClick={handleExportSettings}
                   className="w-full px-4 py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 font-medium rounded-lg hover:bg-blue-500/30 transition-all duration-300"
                 >
-                  Export Settings
+                  {translate('export_settings')}
                 </motion.button>
 
                 <div className="relative">
@@ -981,7 +981,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                     whileTap={{ scale: 0.98 }}
                     className="w-full px-4 py-3 bg-green-500/20 border border-green-500/30 text-green-400 font-medium rounded-lg hover:bg-green-500/30 transition-all duration-300"
                   >
-                    Import Settings
+                    {translate('import_settings')}
                   </motion.button>
                 </div>
               </div>
@@ -992,7 +992,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                   <div>
                     <h4 className="text-white font-medium">{translate('delete_historical_data')}</h4>
                     <p className="text-gray-300 text-sm">
-                      This will permanently delete all stored meter readings and historical data.
+                      {translate('delete_permanent_warning')}
                     </p>
                   </div>
                 </div>
@@ -1004,7 +1004,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                     className="p-4 bg-red-500/20 border border-red-500/30 rounded-lg"
                   >
                     <p className="text-red-400 text-sm mb-4">
-                      Are you sure you want to delete all historical data? This action is irreversible.
+                      {translate('delete_all_data_confirm')}
                     </p>
                     <div className="flex space-x-3">
                       <motion.button
@@ -1014,7 +1014,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                         disabled={isDeletingData}
                         className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                       >
-                        {isDeletingData ? 'Deleting...' : `${translate('yes')}, Delete All Data`}
+                        {isDeletingData ? translate('deleting') : translate('yes_delete_all_data')}
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -1034,7 +1034,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
                     disabled={isDeletingData}
                     className="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 font-medium rounded-lg hover:bg-red-500/30 transition-all duration-300 disabled:opacity-50"
                   >
-                    {isDeletingData ? 'Deleting...' : translate('delete_historical_data')}
+                    {isDeletingData ? translate('deleting') : translate('delete_historical_data')}
                   </motion.button>
                 )}
               </div>
