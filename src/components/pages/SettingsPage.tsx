@@ -280,6 +280,105 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
     }
   };
 
+  const handleUseCurrentLocation = async () => {
+    if (!('geolocation' in navigator)) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    toast.info('Requesting location permission...');
+    
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      console.log('Got GPS coordinates:', latitude, longitude);
+
+      // Store GPS coordinates in localStorage
+      localStorage.setItem('smartmeter_geo_coords', JSON.stringify({ lat: latitude, lon: longitude }));
+
+      // Get location details from reverse geocoding
+      toast.info('Getting location details...');
+      const geocodeResponse = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`,
+        {
+          headers: {
+            'User-Agent': 'SmartMeterDashboard/1.0'
+          }
+        }
+      );
+
+      if (!geocodeResponse.ok) {
+        throw new Error('Geocoding failed');
+      }
+
+      const geocodeData = await geocodeResponse.json();
+      const city = geocodeData.address?.city || geocodeData.address?.town || geocodeData.address?.village || '';
+      const state = geocodeData.address?.state || '';
+      const country = geocodeData.address?.country || '';
+      const countryCode = geocodeData.address?.country_code?.toUpperCase() || '';
+
+      let locationString = '';
+      if (city && state && country) {
+        locationString = `${city}, ${state}, ${country}`;
+      } else if (city && country) {
+        locationString = `${city}, ${country}`;
+      } else if (country) {
+        locationString = country;
+      } else {
+        locationString = 'Unknown Location';
+      }
+
+      // Map timezone based on country
+      const countryTimezones: Record<string, string> = {
+        'US': 'UTC-5', 'CA': 'UTC-5', 'GB': 'UTC+0', 'IE': 'UTC+0',
+        'FR': 'UTC+1', 'DE': 'UTC+1', 'ES': 'UTC+1', 'IT': 'UTC+1',
+        'IN': 'UTC+5.5', 'CN': 'UTC+8', 'JP': 'UTC+9', 'AU': 'UTC+10',
+        'NZ': 'UTC+12', 'BR': 'UTC-3', 'AR': 'UTC-3', 'AE': 'UTC+4',
+        'SA': 'UTC+3', 'RU': 'UTC+3',
+      };
+
+      const mappedTimezone = countryTimezones[countryCode] || 'UTC+0';
+
+      // Update backend
+      await persistPreferences({
+        timezone: mappedTimezone,
+        location: locationString
+      });
+
+      // Update local state
+      setLocation(locationString);
+      setTimezone(mappedTimezone);
+
+      toast.success(`Location updated!\n${locationString}\nTimezone: ${mappedTimezone}`, {
+        duration: 5000
+      });
+
+      // Reload page to ensure all components update
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Location error:', error);
+      if (error.code === 1) {
+        toast.error('Location access denied. Please enable location permissions in your browser settings.');
+      } else if (error.code === 2) {
+        toast.error('Location unavailable. Please try again.');
+      } else if (error.code === 3) {
+        toast.error('Location request timed out. Please try again.');
+      } else {
+        toast.error('Failed to get current location. Please try again.');
+      }
+    }
+  };
+
   const handleDeleteData = () => {
     if (!showDeleteConfirm) {
       setShowDeleteConfirm(true);
@@ -546,16 +645,18 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-400 text-sm mb-2">{translate('region')}</label>
-                <motion.select
-                  whileFocus={{ scale: 1.02 }}
-                  value={location}
-                  onChange={(e) => handleLocationChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                <div className="text-white px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg">
+                  {getLocationName()}
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleUseCurrentLocation}
+                  className="mt-2 w-full py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                 >
-                  {LOCATIONS.map(loc => (
-                    <option key={loc.code} value={loc.code}>{loc.name}</option>
-                  ))}
-                </motion.select>
+                  <MapPin className="w-4 h-4" />
+                  <span>Use Current Location (GPS)</span>
+                </motion.button>
               </div>
               
               <div>
