@@ -664,16 +664,12 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
               
               <div>
                 <label className="block text-gray-400 text-sm mb-2">{translate('timezone')}</label>
-                <motion.select
-                  whileFocus={{ scale: 1.02 }}
-                  value={timezone}
-                  onChange={(e) => handleTimezoneChange(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                >
-                  {TIMEZONES.map(tz => (
-                    <option key={tz.code} value={tz.code}>{tz.code} - {tz.name}</option>
-                  ))}
-                </motion.select>
+                <div className="text-white px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg">
+                  {timezone ? `${timezone} (Auto-detected)` : 'Not set'}
+                </div>
+                <p className="text-gray-400 text-xs mt-1">
+                  Timezone is automatically set based on your GPS location
+                </p>
               </div>
               
               <div>
