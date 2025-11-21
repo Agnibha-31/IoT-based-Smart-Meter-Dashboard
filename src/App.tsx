@@ -117,44 +117,83 @@ export default function App() {
       
       const geocodeData = await geocodeResponse.json();
       
-      // Prioritize major cities over towns/villages for better accuracy
-      // Check address components in order of importance
-      let city = geocodeData.address?.city || 
+      // Global major cities database (worldwide coverage)
+      const globalMajorCities: Record<string, { lat: number; lon: number; radius: number }> = {
+        // India
+        'Kolkata': { lat: 22.5726, lon: 88.3639, radius: 0.5 },
+        'Mumbai': { lat: 19.0760, lon: 72.8777, radius: 0.5 },
+        'Delhi': { lat: 28.7041, lon: 77.1025, radius: 0.5 },
+        'Bangalore': { lat: 12.9716, lon: 77.5946, radius: 0.5 },
+        'Chennai': { lat: 13.0827, lon: 80.2707, radius: 0.5 },
+        'Hyderabad': { lat: 17.3850, lon: 78.4867, radius: 0.5 },
+        'Pune': { lat: 18.5204, lon: 73.8567, radius: 0.5 },
+        'Ahmedabad': { lat: 23.0225, lon: 72.5714, radius: 0.5 },
+        // USA
+        'New York': { lat: 40.7128, lon: -74.0060, radius: 0.5 },
+        'Los Angeles': { lat: 34.0522, lon: -118.2437, radius: 0.5 },
+        'Chicago': { lat: 41.8781, lon: -87.6298, radius: 0.5 },
+        'Houston': { lat: 29.7604, lon: -95.3698, radius: 0.5 },
+        'San Francisco': { lat: 37.7749, lon: -122.4194, radius: 0.3 },
+        'Miami': { lat: 25.7617, lon: -80.1918, radius: 0.4 },
+        // UK
+        'London': { lat: 51.5074, lon: -0.1278, radius: 0.5 },
+        'Manchester': { lat: 53.4808, lon: -2.2426, radius: 0.3 },
+        // Europe
+        'Paris': { lat: 48.8566, lon: 2.3522, radius: 0.4 },
+        'Berlin': { lat: 52.5200, lon: 13.4050, radius: 0.4 },
+        'Madrid': { lat: 40.4168, lon: -3.7038, radius: 0.4 },
+        'Rome': { lat: 41.9028, lon: 12.4964, radius: 0.4 },
+        'Amsterdam': { lat: 52.3676, lon: 4.9041, radius: 0.3 },
+        // Asia-Pacific
+        'Tokyo': { lat: 35.6762, lon: 139.6503, radius: 0.5 },
+        'Singapore': { lat: 1.3521, lon: 103.8198, radius: 0.2 },
+        'Hong Kong': { lat: 22.3193, lon: 114.1694, radius: 0.3 },
+        'Seoul': { lat: 37.5665, lon: 126.9780, radius: 0.5 },
+        'Bangkok': { lat: 13.7563, lon: 100.5018, radius: 0.5 },
+        'Dubai': { lat: 25.2048, lon: 55.2708, radius: 0.4 },
+        'Sydney': { lat: -33.8688, lon: 151.2093, radius: 0.4 },
+        'Melbourne': { lat: -37.8136, lon: 144.9631, radius: 0.4 },
+        // Middle East
+        'Istanbul': { lat: 41.0082, lon: 28.9784, radius: 0.5 },
+        'Tel Aviv': { lat: 32.0853, lon: 34.7818, radius: 0.3 },
+        // Africa
+        'Cairo': { lat: 30.0444, lon: 31.2357, radius: 0.5 },
+        'Johannesburg': { lat: -26.2041, lon: 28.0473, radius: 0.5 },
+        'Lagos': { lat: 6.5244, lon: 3.3792, radius: 0.5 },
+        // South America
+        'São Paulo': { lat: -23.5505, lon: -46.6333, radius: 0.5 },
+        'Buenos Aires': { lat: -34.6037, lon: -58.3816, radius: 0.5 },
+        'Mexico City': { lat: 19.4326, lon: -99.1332, radius: 0.5 },
+        // Canada
+        'Toronto': { lat: 43.6532, lon: -79.3832, radius: 0.4 },
+        'Vancouver': { lat: 49.2827, lon: -123.1207, radius: 0.3 }
+      };
+      
+      // Check if coordinates are near any major city globally
+      let detectedMajorCity = '';
+      for (const [cityName, coords] of Object.entries(globalMajorCities)) {
+        const distance = Math.sqrt(
+          Math.pow(latitude - coords.lat, 2) + 
+          Math.pow(longitude - coords.lon, 2)
+        );
+        if (distance <= coords.radius) {
+          detectedMajorCity = cityName;
+          console.log(`Detected major city: ${cityName} (within ${coords.radius}° radius)`);
+          break;
+        }
+      }
+      
+      // Prioritize detected major city, then fallback to OpenStreetMap data
+      let city = detectedMajorCity || 
+                 geocodeData.address?.city || 
                  geocodeData.address?.municipality ||
                  geocodeData.address?.county ||
                  geocodeData.address?.town || 
                  geocodeData.address?.village || '';
       
-      const state = geocodeData.address?.state || '';
+      const state = geocodeData.address?.state || geocodeData.address?.region || '';
       const country = geocodeData.address?.country || '';
       const countryCode = geocodeData.address?.country_code?.toUpperCase() || '';
-      
-      // For India, try to get the district/metro city if available
-      if (countryCode === 'IN') {
-        // Check if we're near a major metro city based on coordinates
-        const majorCities: Record<string, { lat: number; lon: number; radius: number }> = {
-          'Kolkata': { lat: 22.5726, lon: 88.3639, radius: 0.5 },
-          'Mumbai': { lat: 19.0760, lon: 72.8777, radius: 0.5 },
-          'Delhi': { lat: 28.7041, lon: 77.1025, radius: 0.5 },
-          'Bangalore': { lat: 12.9716, lon: 77.5946, radius: 0.5 },
-          'Chennai': { lat: 13.0827, lon: 80.2707, radius: 0.5 },
-          'Hyderabad': { lat: 17.3850, lon: 78.4867, radius: 0.5 },
-          'Pune': { lat: 18.5204, lon: 73.8567, radius: 0.5 },
-          'Ahmedabad': { lat: 23.0225, lon: 72.5714, radius: 0.5 }
-        };
-        
-        for (const [cityName, coords] of Object.entries(majorCities)) {
-          const distance = Math.sqrt(
-            Math.pow(latitude - coords.lat, 2) + 
-            Math.pow(longitude - coords.lon, 2)
-          );
-          if (distance <= coords.radius) {
-            city = cityName;
-            console.log(`Detected major city: ${cityName} (within ${coords.radius}° radius)`);
-            break;
-          }
-        }
-      }
       
       let locationString = '';
       if (city && state && country) {
