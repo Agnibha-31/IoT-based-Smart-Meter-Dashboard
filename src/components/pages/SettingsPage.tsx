@@ -184,18 +184,18 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
   };
 
   const refreshRateOptions = [
-    { value: '1', label: '1 Second' },
-    { value: '2', label: '2 Seconds' },
-    { value: '5', label: '5 Seconds' },
-    { value: '10', label: '10 Seconds' },
-    { value: '30', label: '30 Seconds' },
-    { value: '60', label: '1 Minute' }
+    { value: '1', label: translate('1_second') },
+    { value: '2', label: translate('2_seconds') },
+    { value: '5', label: translate('5_seconds') },
+    { value: '10', label: translate('10_seconds') },
+    { value: '30', label: translate('30_seconds') },
+    { value: '60', label: translate('1_minute') }
   ];
 
   const themeOptions = [
-    { value: 'dark', label: 'Dark Theme' },
-    { value: 'light', label: 'Light Theme' },
-    { value: 'auto', label: 'Auto (System)' }
+    { value: 'dark', label: translate('dark_theme') },
+    { value: 'light', label: translate('light_theme') },
+    { value: 'auto', label: translate('auto_system') }
   ];
 
   const validatePassword = (password: string) => {
@@ -872,7 +872,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700">
             <div className="flex items-center space-x-3 mb-6">
               <Settings className="w-5 h-5 text-purple-400" />
-              <h3 className="text-white text-lg font-medium">App Preferences</h3>
+              <h3 className="text-white text-lg font-medium">{translate('app_preferences')}</h3>
             </div>
             
             <div className="space-y-4">
