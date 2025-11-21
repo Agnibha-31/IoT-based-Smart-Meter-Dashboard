@@ -173,7 +173,7 @@ export default function App() {
         return;
       }
       
-      const updateResponse = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/profile`, {
+      const updateResponse = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/preferences`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
