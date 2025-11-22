@@ -105,7 +105,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       case 'analytics': return <AnalyticsPage />;
       case 'data-download': return <DataDownloadPage />;
       case 'settings': return <SettingsPage onLogout={onLogout} />;
-      case 'cost': return <CostPage />;
+      case 'cost': return <CostPage liveData={liveData} />;
       default: return <HomePage />;
     }
   };

@@ -4,9 +4,28 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { DollarSign, Calculator, TrendingUp, Clock, Zap, Receipt, RefreshCw } from 'lucide-react';
 import { useSettings, CURRENCIES } from '../SettingsContext';
 import { useLiveCurrency } from '../../utils/useLiveCurrency';
+import { useElectricityRate } from '../../utils/useElectricityRate';
 import { fetchSummary, fetchHistory, fetchCostProjection } from '../../utils/apiClient';
 
 type CostPoint = { date: string; cost: number; energy: number; peakCost: number; offPeakCost: number };
+
+interface LiveData {
+  vrms: number;
+  irms: number;
+  power: number;
+  energy: number;
+  real_power_kw: number;
+  apparent_power_kva: number;
+  power_factor: number;
+  reactive_power_kvar: number;
+  instant_cost: number;
+  carbon_footprint: number;
+  timestamp: any;
+}
+
+interface CostPageProps {
+  liveData?: LiveData;
+}
 
 const periodKeyToBackend = (key: string) => {
   switch (key) {
@@ -17,17 +36,21 @@ const periodKeyToBackend = (key: string) => {
   }
 };
 
-export default function CostPage() {
+export default function CostPage({ liveData }: CostPageProps) {
   const { translate, setCurrency, currency } = useSettings();
   const {
     exchangeRates,
-    rateSource,
-    rateAccuracy,
-    lastRateUpdate,
-    isRefreshing: isRefreshingRates,
-    convertFromINR,
-    forceRefresh: handleRefreshRates
+    convertFromINR
   } = useLiveCurrency();
+  
+  const {
+    rate: electricityRate,
+    rateInfo,
+    isRefreshing: isRefreshingRate,
+    forceRefresh: handleRefreshRate,
+    isFresh,
+    lastUpdate
+  } = useElectricityRate();
 
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
@@ -38,6 +61,7 @@ export default function CostPage() {
   const [costData, setCostData] = useState<CostPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [liveCosts, setLiveCosts] = useState({ hourly: 0, daily: 0, monthly: 0, yearly: 0 });
 
   useEffect(() => { setSelectedCurrency(currency); }, [currency]);
 
@@ -47,6 +71,27 @@ export default function CostPage() {
     const converted = convertFromINR(costINR, selectedCurrency);
     setCalculatedCost(converted);
   }, [calculatorValues, selectedCurrency, exchangeRates, convertFromINR]);
+
+  // Calculate live costs based on real-time data
+  useEffect(() => {
+    if (liveData && electricityRate) {
+      // Calculate power in kW
+      const powerKW = (liveData.real_power_kw || (liveData.vrms * liveData.irms / 1000)) || 0;
+      
+      // Calculate costs in INR
+      const hourlyCostINR = powerKW * electricityRate;
+      const dailyCostINR = hourlyCostINR * 24;
+      const monthlyCostINR = dailyCostINR * 30;
+      const yearlyCostINR = dailyCostINR * 365;
+      
+      setLiveCosts({
+        hourly: hourlyCostINR,
+        daily: dailyCostINR,
+        monthly: monthlyCostINR,
+        yearly: yearlyCostINR
+      });
+    }
+  }, [liveData, electricityRate]);
 
   const buildCostBuckets = useCallback((history: any[], baseRate: number, energySplit: any): CostPoint[] => {
     if (!Array.isArray(history) || !history.length) return [];
@@ -179,69 +224,38 @@ export default function CostPage() {
           </div>
         </div>
         
-        <div className="flex space-x-4">
-          <motion.div
-            animate={{ 
-              boxShadow: [
-                '0 0 20px rgba(34, 197, 94, 0.3)',
-                '0 0 40px rgba(34, 197, 94, 0.6)',
-                '0 0 20px rgba(34, 197, 94, 0.3)'
-              ]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="px-4 py-2 bg-green-500/20 rounded-lg border border-green-500/30"
-          >
-            <div className="text-center">
-              <p className="text-green-400 text-sm">{translate('current_rate')}</p>
-              <p className="text-white font-medium">₹{(projection?.baseRate ?? 6.50).toFixed(2)}/kWh</p>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`px-4 py-2 rounded-lg border flex items-center space-x-2 cursor-pointer ${
-              rateAccuracy === 'live' 
-                ? 'bg-green-500/20 border-green-500/30' 
-                : rateAccuracy === 'cached'
-                ? 'bg-yellow-500/20 border-yellow-500/30'
-                : 'bg-red-500/20 border-red-500/30'
-            }`}
-            onClick={handleRefreshRates}
-          >
-            <RefreshCw className={`w-4 h-4 ${
-              rateAccuracy === 'live' ? 'text-green-400' :
-              rateAccuracy === 'cached' ? 'text-yellow-400' : 'text-red-400'
-            } ${isRefreshingRates ? 'animate-spin' : ''}`} />
-            <div className="text-center">
-              <p className={`text-xs ${
-                rateAccuracy === 'live' ? 'text-green-400' :
-                rateAccuracy === 'cached' ? 'text-yellow-400' : 'text-red-400'
-              }`}>
-                {rateAccuracy === 'live' ? '🟢 Live Rates' :
-                 rateAccuracy === 'cached' ? '🟡 Cached Rates' : '🔴 Static Rates'}
-              </p>
-              <p className="text-white text-xs">
-                {lastRateUpdate ? 
-                  (lastRateUpdate as Date).toLocaleTimeString() : 
-                  'Loading...'
-                }
-              </p>
-              <p className="text-gray-300 text-xs">
-                {rateSource}
-              </p>
-            </div>
-          </motion.div>
-        </div>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleRefreshRate}
+          className={`px-6 py-3 rounded-lg border flex items-center space-x-3 cursor-pointer ${
+            isFresh 
+              ? 'bg-green-500/20 border-green-500/30' 
+              : 'bg-yellow-500/20 border-yellow-500/30'
+          }`}
+        >
+          <RefreshCw className={`w-5 h-5 ${
+            isFresh ? 'text-green-400' : 'text-yellow-400'
+          } ${isRefreshingRate ? 'animate-spin' : ''}`} />
+          <div>
+            <p className="text-gray-400 text-xs">{translate('current_rate')}</p>
+            <p className="text-white font-medium text-lg">₹{electricityRate.toFixed(2)}/kWh</p>
+            <p className={`text-xs ${
+              isFresh ? 'text-green-400' : 'text-yellow-400'
+            }`}>
+              {rateInfo.source} • {lastUpdate ? lastUpdate.toLocaleTimeString() : 'Loading...'}
+            </p>
+          </div>
+        </motion.div>
       </div>
 
       {/* Live Cost Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: translate('hourly_cost'), value: `${getCurrencySymbol()}${convertCurrency(projection?.hourly ?? 0)}`, icon: Clock, color: 'from-blue-500 to-cyan-500' },
-          { label: translate('daily_cost'), value: `${getCurrencySymbol()}${convertCurrency(projection?.daily ?? 0)}`, icon: DollarSign, color: 'from-green-500 to-emerald-500' },
-          { label: translate('monthly_est'), value: `${getCurrencySymbol()}${convertCurrency(projection?.monthly ?? 0)}`, icon: Receipt, color: 'from-purple-500 to-violet-500' },
-          { label: translate('yearly_est'), value: `${getCurrencySymbol()}${convertCurrency(projection?.yearly ?? 0)}`, icon: TrendingUp, color: 'from-orange-500 to-red-500' }
+          { label: translate('hourly_cost'), value: `${getCurrencySymbol()}${convertCurrency(liveCosts.hourly)}`, icon: Clock, color: 'from-blue-500 to-cyan-500' },
+          { label: translate('daily_cost'), value: `${getCurrencySymbol()}${convertCurrency(liveCosts.daily)}`, icon: DollarSign, color: 'from-green-500 to-emerald-500' },
+          { label: translate('monthly_est'), value: `${getCurrencySymbol()}${convertCurrency(liveCosts.monthly)}`, icon: Receipt, color: 'from-purple-500 to-violet-500' },
+          { label: translate('yearly_est'), value: `${getCurrencySymbol()}${convertCurrency(liveCosts.yearly)}`, icon: TrendingUp, color: 'from-orange-500 to-red-500' }
         ].map((metric, index) => {
           const Icon = metric.icon;
           
@@ -376,18 +390,16 @@ export default function CostPage() {
               <div className="text-center">
                 <p className="text-green-400 text-sm font-medium mb-1">{translate('calculated_cost')}</p>
                 <div className="flex items-center justify-center space-x-2">
-                  {isRefreshingRates && (
+                  {isRefreshingRate && (
                     <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
                   )}
                   <p className="text-2xl font-medium text-white">
                     {getCurrencySymbol()}{calculatedCost.toFixed(4)}
                   </p>
                 </div>
-                {rateAccuracy !== 'live' && (
-                  <p className={`text-xs mt-1 ${
-                    rateAccuracy === 'cached' ? 'text-yellow-400' : 'text-red-400'
-                  }`}>
-                    {rateAccuracy === 'cached' ? '⚠️ Using cached rates' : '⚠️ Using fallback rates'}
+                {!isFresh && (
+                  <p className="text-xs mt-1 text-yellow-400">
+                    ⚠️ Using cached rates
                   </p>
                 )}
               </div>
