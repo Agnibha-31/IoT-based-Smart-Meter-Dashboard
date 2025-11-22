@@ -233,28 +233,26 @@ export default function DeviceConfigPage() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-sm text-gray-400">API Key</label>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <code className="text-white font-mono text-sm break-all flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <code className="text-white font-mono text-sm break-all">
                         {showApiKey[selectedDevice.id] ? selectedDevice.api_key : '••••••••••••••••••••••••••••••••••••'}
                       </code>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => toggleApiKeyVisibility(selectedDevice.id)}
-                          className="p-1.5 hover:bg-gray-700 rounded"
-                        >
-                          {showApiKey[selectedDevice.id] ? (
-                            <EyeOff className="w-4 h-4 text-gray-400" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-gray-400" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => copyToClipboard(selectedDevice.api_key, 'API Key')}
-                          className="p-1.5 hover:bg-gray-700 rounded"
-                        >
-                          <Copy className="w-4 h-4 text-gray-400" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => toggleApiKeyVisibility(selectedDevice.id)}
+                        className="p-1.5 hover:bg-gray-700 rounded flex-shrink-0"
+                      >
+                        {showApiKey[selectedDevice.id] ? (
+                          <EyeOff className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-gray-400" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => copyToClipboard(selectedDevice.api_key, 'API Key')}
+                        className="p-1.5 hover:bg-gray-700 rounded flex-shrink-0"
+                      >
+                        <Copy className="w-4 h-4 text-gray-400" />
+                      </button>
                     </div>
                   </div>
                   <div>
@@ -306,11 +304,14 @@ export default function DeviceConfigPage() {
                       <div className="flex-1">
                         <h3 className="font-semibold text-white mb-2">How to Connect Your ESP32</h3>
                         <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-                          <li>Copy the configuration code below</li>
-                          <li>Paste it into your ESP32 Arduino sketch</li>
-                          <li>Update WiFi SSID and password</li>
+                          <li>Install ArduinoJson library (v6.x) via Arduino Library Manager</li>
+                          <li>Copy the complete Arduino code below</li>
+                          <li>Create new sketch in Arduino IDE and paste the code</li>
+                          <li>Update YOUR_WIFI_SSID and YOUR_WIFI_PASSWORD with your credentials</li>
+                          <li>Connect ESP32 to computer via USB</li>
+                          <li>Select correct board (ESP32 Dev Module) and COM port</li>
                           <li>Upload the firmware to your ESP32</li>
-                          <li>Monitor serial output to verify connection</li>
+                          <li>Open Serial Monitor (115200 baud) to verify connection and data transmission</li>
                         </ol>
                       </div>
                     </div>
@@ -371,10 +372,22 @@ export default function DeviceConfigPage() {
                     <div className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-green-400 mt-0.5" />
                       <div>
-                        <h3 className="font-semibold text-white mb-1">Testing Your Connection</h3>
-                        <p className="text-sm text-gray-300">
-                          After uploading the code, your ESP32 should start sending data every 5 seconds. 
-                          Check the Home page to see live readings appear on your dashboard.
+                        <h3 className="font-semibold text-white mb-2">Testing Your Connection</h3>
+                        <p className="text-sm text-gray-300 mb-2">
+                          After uploading the code, your ESP32 will automatically:
+                        </p>
+                        <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside ml-2">
+                          <li>Connect to your WiFi network</li>
+                          <li>Send sensor readings every 5 seconds to the server</li>
+                          <li>Display connection status and responses in Serial Monitor</li>
+                        </ul>
+                        <p className="text-sm text-gray-300 mt-2">
+                          <strong>Verification:</strong> Open Serial Monitor (115200 baud) to see connection status. 
+                          Check the Home page for live readings. Look for ✓ symbols indicating successful data transmission.
+                        </p>
+                        <p className="text-sm text-yellow-300 mt-2">
+                          <strong>Note:</strong> The code includes simulated sensor values. Replace the read*() functions 
+                          with actual sensor reading code (e.g., PZEM-004T module) for real measurements.
                         </p>
                       </div>
                     </div>
