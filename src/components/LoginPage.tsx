@@ -20,35 +20,14 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false); // Always start with login page
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const debounceTimer = useRef<number | null>(null);
   const lastTried = useRef<{ email: string; password: string } | null>(null);
 
-  // Check if this is first time setup
-  useEffect(() => {
-    // First check localStorage - if a user was registered before, skip API call
-    const userExists = localStorage.getItem('userExists');
-    if (userExists === 'true') {
-      setIsFirstTimeUser(false);
-      return;
-    }
-    
-    // Otherwise check with backend API
-    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
-    fetch(`${API_BASE}/api/auth/check-first-user`)
-      .then(res => res.json())
-      .then(data => {
-        setIsFirstTimeUser(data.isFirstUser);
-        // If user exists, store it in localStorage
-        if (!data.isFirstUser) {
-          localStorage.setItem('userExists', 'true');
-        }
-      })
-      .catch(() => setIsFirstTimeUser(false));
-  }, []);
+  // Always show login page on load - removed automatic first-time check
 
   // Full name validation - at least 2 words, each starting with capital letter
   const validateName = (fullName: string) => {
@@ -470,21 +449,76 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               </div>
             )}
 
-            {/* Sign In button removed - auto-login handles authentication */}
-            {isFirstTimeUser && (
-              <motion.button
-                whileHover={{ scale: isFormValid ? 1.05 : 1 }}
-                whileTap={{ scale: isFormValid ? 0.95 : 1 }}
-                type="submit"
-                disabled={isSubmitting || !isFormValid}
-                className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
-                  isFormValid && !isSubmitting
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
-                    : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
-                }`}
+            {/* Register link for login mode */}
+            {!isFirstTimeUser && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-center"
               >
-                {isSubmitting ? 'Creating Account...' : 'Register'}
-              </motion.button>
+                <p className="text-white/70 text-sm">
+                  Not registered?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFirstTimeUser(true);
+                      setShowError(null);
+                      setPassword('');
+                      setConfirmPassword('');
+                      setName('');
+                    }}
+                    className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition-colors duration-200 cursor-pointer"
+                  >
+                    Register
+                  </button>
+                </p>
+              </motion.div>
+            )}
+
+            {/* Sign In button removed - auto-login handles authentication */}
+            {/* Register button for registration mode */}
+            {isFirstTimeUser && (
+              <>
+                <motion.button
+                  whileHover={{ scale: isFormValid ? 1.05 : 1 }}
+                  whileTap={{ scale: isFormValid ? 0.95 : 1 }}
+                  type="submit"
+                  disabled={isSubmitting || !isFormValid}
+                  className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
+                    isFormValid && !isSubmitting
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
+                      : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  {isSubmitting ? 'Creating Account...' : 'Register'}
+                </motion.button>
+
+                {/* Sign In link for registration mode */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center mt-3"
+                >
+                  <p className="text-white/70 text-sm">
+                    Already registered?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsFirstTimeUser(false);
+                        setShowError(null);
+                        setPassword('');
+                        setConfirmPassword('');
+                        setName('');
+                      }}
+                      className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition-colors duration-200 cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                  </p>
+                </motion.div>
+              </>
             )}
 
             {showError && (
