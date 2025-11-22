@@ -12,15 +12,15 @@ import { db } from '../db.js';
 const router = Router();
 
 const metricCatalogue = {
-  voltage: { label: 'Voltage (V)', field: 'voltage' },
-  current: { label: 'Current (A)', field: 'current' },
-  real_power_kw: { label: 'Real Power (kW)', field: 'real_power_kw' },
-  apparent_power_kva: { label: 'Apparent Power (kVA)', field: 'apparent_power_kva' },
-  reactive_power_kvar: { label: 'Reactive Power (kVAR)', field: 'reactive_power_kvar' },
-  energy_kwh: { label: 'Energy (kWh)', field: 'energy_kwh' },
-  total_energy_kwh: { label: 'Totalized Energy (kWh)', field: 'total_energy_kwh' },
-  frequency: { label: 'Frequency (Hz)', field: 'frequency' },
-  power_factor: { label: 'Power Factor', field: 'power_factor' },
+  voltage: { label: 'Voltage (V)', field: 'voltage', convertFromKilo: false },
+  current: { label: 'Current (A)', field: 'current', convertFromKilo: false },
+  real_power_kw: { label: 'Real Power (W)', field: 'real_power_kw', convertFromKilo: true },
+  apparent_power_kva: { label: 'Apparent Power (VA)', field: 'apparent_power_kva', convertFromKilo: true },
+  reactive_power_kvar: { label: 'Reactive Power (VAR)', field: 'reactive_power_kvar', convertFromKilo: true },
+  energy_kwh: { label: 'Energy (Wh)', field: 'energy_kwh', convertFromKilo: true },
+  total_energy_kwh: { label: 'Total Energy (Wh)', field: 'total_energy_kwh', convertFromKilo: true },
+  frequency: { label: 'Frequency (Hz)', field: 'frequency', convertFromKilo: false },
+  power_factor: { label: 'Power Factor', field: 'power_factor', convertFromKilo: false },
 };
 
 const samplingIntervals = {
@@ -34,7 +34,7 @@ const samplingIntervals = {
 
 const filterMetrics = (requested) => {
   if (!requested?.length) {
-    return ['voltage', 'current', 'real_power_kw', 'energy_kwh', 'power_factor', 'frequency'];
+    return ['voltage', 'current', 'real_power_kw', 'energy_kwh', 'power_factor'];
   }
   return requested.filter((key) => metricCatalogue[key]);
 };
@@ -60,7 +60,15 @@ const buildDataset = (rows, metrics) =>
       iso8601: new Date(row.captured_at * 1000).toISOString(),
     };
     metrics.forEach((metric) => {
-      record[metric] = row[metricCatalogue[metric].field];
+      const metricInfo = metricCatalogue[metric];
+      let value = row[metricInfo.field];
+      
+      // Convert from kilo units to base units (kW -> W, kWh -> Wh, kVA -> VA, kVAR -> VAR)
+      if (metricInfo.convertFromKilo && typeof value === 'number') {
+        value = value * 1000;
+      }
+      
+      record[metric] = value;
     });
     return record;
   });

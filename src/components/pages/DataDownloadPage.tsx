@@ -73,13 +73,13 @@ export default function DataDownloadPage() {
   const metrics = [
     { key: 'voltage', label: 'Voltage (V)', color: 'from-blue-500 to-cyan-500', unit: 'V' },
     { key: 'current', label: 'Current (A)', color: 'from-green-500 to-emerald-500', unit: 'A' },
-    { key: 'real_power_kw', label: 'Real Power (kW)', color: 'from-purple-500 to-violet-500', unit: 'kW' },
-    { key: 'apparent_power_kva', label: 'Apparent Power (kVA)', color: 'from-emerald-500 to-teal-500', unit: 'kVA' },
-    { key: 'reactive_power_kvar', label: 'Reactive Power (kVAR)', color: 'from-cyan-500 to-blue-500', unit: 'kVAR' },
-    { key: 'energy_kwh', label: 'Energy (kWh)', color: 'from-orange-500 to-red-500', unit: 'kWh' },
-    { key: 'total_energy_kwh', label: 'Cumulative Energy (kWh)', color: 'from-amber-500 to-yellow-500', unit: 'kWh' },
-    { key: 'power_factor', label: 'Power Factor', color: 'from-pink-500 to-rose-500', unit: '' },
+    { key: 'real_power_kw', label: 'Real Power (W)', color: 'from-purple-500 to-violet-500', unit: 'W', convertFromKilo: true },
+    { key: 'apparent_power_kva', label: 'Apparent Power (VA)', color: 'from-emerald-500 to-teal-500', unit: 'VA', convertFromKilo: true },
+    { key: 'reactive_power_kvar', label: 'Reactive Power (VAR)', color: 'from-cyan-500 to-blue-500', unit: 'VAR', convertFromKilo: true },
+    { key: 'energy_kwh', label: 'Energy (Wh)', color: 'from-orange-500 to-red-500', unit: 'Wh', convertFromKilo: true },
+    { key: 'total_energy_kwh', label: 'Total Energy (Wh)', color: 'from-amber-500 to-yellow-500', unit: 'Wh', convertFromKilo: true },
     { key: 'frequency', label: 'Frequency (Hz)', color: 'from-indigo-500 to-blue-500', unit: 'Hz' },
+    { key: 'power_factor', label: 'Power Factor', color: 'from-pink-500 to-rose-500', unit: '' },
   ];
 
   const presetRanges = [
@@ -925,9 +925,15 @@ export default function DataDownloadPage() {
                         </td>
                         {selectedMetrics.map(metric => {
                           const metricInfo = metrics.find(m => m.key === metric);
-                          const value = row[metric];
+                          let value = row[metric];
+                          
+                          // Convert kilo units to base units
+                          if (metricInfo?.convertFromKilo && typeof value === 'number') {
+                            value = value * 1000;
+                          }
+                          
                           const formatted = typeof value === 'number'
-                            ? value.toFixed(metric === 'power_factor' ? 4 : 3)
+                            ? value.toFixed(metric === 'power_factor' ? 4 : 2)
                             : value ?? '--';
                           return (
                             <td key={metric} className="p-3 text-white">
