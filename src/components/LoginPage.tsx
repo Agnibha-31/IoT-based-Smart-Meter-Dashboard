@@ -192,7 +192,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-white/90 text-sm mb-6">
-                {isFirstTimeUser ? translate('setup_account') : translate('enter_credentials')}
+                {isFirstTimeUser ? 'Account Registration' : translate('enter_credentials')}
               </p>
             </div>
             
@@ -384,15 +384,14 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             {isFirstTimeUser && (
               <div className="relative">
                 <label className="block text-white/90 text-sm mb-2 text-center">Confirm Password</label>
-                <div className="relative w-4/5 mx-auto">
+                <div className="relative w-4/5 mx-auto flex items-center">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onFocus={() => setConfirmPasswordFocused(true)}
                     onBlur={() => setConfirmPasswordFocused(false)}
-                    style={{ paddingLeft: '2.0rem', paddingRight: '3.5rem' }}
-                    className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${!isPasswordValid ? 'pointer-events-none' : ''}`}
+                    className={`w-full py-2.5 px-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${!isPasswordValid ? 'pointer-events-none' : ''}`}
                     placeholder={confirmPasswordFocused || confirmPassword ? '' : 'Re-enter your password'}
                     autoComplete="new-password"
                     disabled={!isPasswordValid}
@@ -400,7 +399,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute text-white/60 hover:text-white transition-colors duration-200"
+                    className="absolute right-3 text-white/60 hover:text-white transition-colors duration-200"
                     style={{ right: confirmPassword ? '2.5rem' : '0.75rem' }}
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -465,7 +464,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                     : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
                 }`}
               >
-                {isSubmitting ? translate('creating_account') : translate('create_account')}
+                {isSubmitting ? 'Creating Account...' : 'Register'}
               </motion.button>
             )}
 
