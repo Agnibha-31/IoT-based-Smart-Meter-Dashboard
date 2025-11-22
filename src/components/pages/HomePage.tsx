@@ -114,8 +114,8 @@ export default function HomePage() {
     {
       key: 'power',
       label: translate('power'),
-      value: liveData.power.toFixed(2),
-      unit: translate('kilowatts'),
+      value: (liveData.power * 1000).toFixed(1),
+      unit: translate('watts'),
       icon: Power,
       color: 'from-purple-500 to-violet-500',
       change: formatChange(liveData.power, summaryResult.summary?.averages?.power_kw)
@@ -123,8 +123,8 @@ export default function HomePage() {
     {
       key: 'energy',
       label: translate('energy'),
-      value: liveData.energy.toFixed(2),
-      unit: translate('kilowatt_hours'),
+      value: (liveData.energy * 1000).toFixed(0),
+      unit: translate('watt_hours'),
       icon: Battery,
       color: 'from-orange-500 to-red-500',
       change: formatChange(liveData.energy, summaryResult.summary?.totals?.energy_kwh)
@@ -157,7 +157,7 @@ export default function HomePage() {
             <h1 className="text-3xl font-medium text-white mb-2">{translate('smart_meter_dashboard')}</h1>
             <p className="text-gray-400">{translate('real_time_monitoring')}</p>
             <p className="text-gray-500 text-sm">
-              24h Energy: {(summaryResult.summary?.totals?.energy_kwh ?? 0).toFixed(2)} kWh
+              24h Energy: {((summaryResult.summary?.totals?.energy_kwh ?? 0) * 1000).toFixed(0)} Wh
             </p>
           </div>
         </div>

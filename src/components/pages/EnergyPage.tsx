@@ -193,7 +193,7 @@ export default function EnergyPage() {
         >
           <div className="flex items-center space-x-2">
             <Zap className="w-5 h-5 text-orange-400" />
-            <span className="text-orange-400 font-medium">{(liveEnergy || totalEnergy).toFixed(2)} kWh</span>
+            <span className="text-orange-400 font-medium">{((liveEnergy || totalEnergy) * 1000).toFixed(0)} Wh</span>
           </div>
         </motion.div>
       </div>

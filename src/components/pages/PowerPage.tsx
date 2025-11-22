@@ -26,22 +26,22 @@ const RANGE_OPTIONS = {
 const deriveSnapshot = (reading?: LiveReading | null) => {
   const voltage = reading?.voltage ?? null;
   const current = reading?.current ?? null;
-  const active = reading?.real_power_kw ?? (voltage != null && current != null ? (voltage * current * 0.95) / 1000 : null);
-  const apparent = reading?.apparent_power_kva ?? (voltage != null && current != null ? (voltage * current) / 1000 : null);
-  const reactive = reading?.reactive_power_kvar ?? (active != null && apparent != null ? Math.sqrt(Math.max(apparent ** 2 - active ** 2, 0)) : null);
+  const active = reading?.real_power_kw ? reading.real_power_kw * 1000 : (voltage != null && current != null ? (voltage * current * 0.95) : null);
+  const apparent = reading?.apparent_power_kva ? reading.apparent_power_kva * 1000 : (voltage != null && current != null ? (voltage * current) : null);
+  const reactive = reading?.reactive_power_kvar ? reading.reactive_power_kvar * 1000 : (active != null && apparent != null ? Math.sqrt(Math.max(apparent ** 2 - active ** 2, 0)) : null);
   const factor = reading?.power_factor ?? (active != null && apparent ? active / apparent : null);
   return {
-    active: Number((active ?? 0).toFixed(3)),
-    apparent: Number((apparent ?? 0).toFixed(3)),
-    reactive: Number((reactive ?? 0).toFixed(3)),
+    active: Number((active ?? 0).toFixed(1)),
+    apparent: Number((apparent ?? 0).toFixed(1)),
+    reactive: Number((reactive ?? 0).toFixed(1)),
     factor: Number((factor ?? 0).toFixed(3)),
   };
 };
 
 const metrics = [
-  { key: 'activePower', labelKey: 'active_power', color: '#8b5cf6', unit: 'kW' },
-  { key: 'reactivePower', labelKey: 'reactive_power', color: '#06b6d4', unit: 'kVAR' },
-  { key: 'apparentPower', labelKey: 'apparent_power', color: '#10b981', unit: 'kVA' },
+  { key: 'activePower', labelKey: 'active_power', color: '#8b5cf6', unit: 'W' },
+  { key: 'reactivePower', labelKey: 'reactive_power', color: '#06b6d4', unit: 'VAR' },
+  { key: 'apparentPower', labelKey: 'apparent_power', color: '#10b981', unit: 'VA' },
   { key: 'powerFactor', labelKey: 'power_factor', color: '#f59e0b', unit: '' },
 ];
 
@@ -110,7 +110,7 @@ export default function PowerPage() {
   const stats = useMemo(() => ([
     {
       labelKey: 'active_power',
-      value: (summary?.averages?.power_kw ?? livePower.active).toFixed(2),
+      value: ((summary?.averages?.power_kw ?? livePower.active / 1000) * 1000).toFixed(1),
       unit: translate('kilowatts'),
       icon: Power,
       color: 'from-purple-500 to-violet-500',
@@ -144,8 +144,8 @@ export default function PowerPage() {
 
   const historyData = useMemo(() => historyPoints.map((point) => {
     const label = new Date(point.timestamp * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit' });
-    const apparent = point.voltage != null && point.current != null ? (point.voltage * point.current) / 1000 : null;
-    const active = point.realPowerKw ?? null;
+    const apparent = point.voltage != null && point.current != null ? (point.voltage * point.current) : null;
+    const active = point.realPowerKw ? point.realPowerKw * 1000 : null;
     const reactive = apparent != null && active != null ? Math.sqrt(Math.max(apparent ** 2 - active ** 2, 0)) : null;
     const pf = point.powerFactor ?? (apparent && active ? active / apparent : null);
     return {
@@ -172,7 +172,7 @@ export default function PowerPage() {
           <div>
             <h1 className="text-3xl font-medium text-white">{translate('power_analysis')}</h1>
             <p className="text-gray-400">
-              {translate('total_consumption')}: {(summary?.totals?.real_power_kwh ?? 0).toFixed(1)} kW·h
+              {translate('total_consumption')}: {((summary?.totals?.real_power_kwh ?? 0) * 1000).toFixed(0)} W·h
             </p>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function PowerPage() {
         >
           <Zap className="w-5 h-5 text-purple-400" />
           <span className="text-purple-400 font-medium">
-            {livePower.active.toFixed(2)} kW
+            {livePower.active.toFixed(1)} W
           </span>
         </motion.div>
       </div>
