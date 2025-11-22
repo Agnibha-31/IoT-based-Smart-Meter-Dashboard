@@ -244,7 +244,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             )}
             
             <div className="relative">
-              <label className="block text-white/90 text-sm mb-2 text-center">{isFirstTimeUser ? 'Mail Id' : translate('username')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">{isRegisterMode ? 'Mail Id' : translate('username')}</label>
               <div className="relative w-4/5 mx-auto">
                 <motion.input
                   whileFocus={{ scale: 1.02 }}
@@ -254,12 +254,12 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onFocus={() => setUsernameFocused(true)}
                   onBlur={() => setUsernameFocused(false)}
                   style={{ paddingLeft: '3.5rem', paddingRight: '3rem' }}
-                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !nameValidation.isValid ? 'pointer-events-none' : ''}`}
-                  placeholder={usernameFocused || email ? '' : (isFirstTimeUser ? 'Enter your email address' : translate('enter_username'))}
-                  autoComplete="username"
-                  disabled={isFirstTimeUser ? !nameValidation.isValid : false}
+                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isRegisterMode && !nameValidation.isValid ? 'pointer-events-none' : ''}`}
+                  placeholder={usernameFocused || email ? '' : (isRegisterMode ? 'Enter your email address' : translate('enter_username'))}
+                  autoComplete="email"
+                  disabled={isRegisterMode ? !nameValidation.isValid : false}
                 />
-                {isFirstTimeUser && email && (
+                {isRegisterMode && email && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -282,7 +282,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   </motion.div>
                 )}
               </div>
-              {isFirstTimeUser && email && !emailValidation.isValid && (
+              {isRegisterMode && email && !emailValidation.isValid && (
                 <motion.p
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -296,7 +296,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             </div>
             
             <div className="relative">
-              <label className="block text-white/90 text-sm mb-2 text-center">{isFirstTimeUser ? 'Create Password' : translate('password')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">{isRegisterMode ? 'Create Password' : translate('password')}</label>
               <div className="relative w-4/5 mx-auto flex items-center">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -304,27 +304,27 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => {
                     setPasswordFocused(true);
-                    if (isFirstTimeUser) setShowPasswordHelp(true);
+                    if (isRegisterMode) setShowPasswordHelp(true);
                   }}
                   onBlur={() => {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
-                  style={{ paddingLeft: '2.0rem', paddingRight: isFirstTimeUser ? '3.5rem' : '3.0rem' }}
-                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !emailValidation.isValid ? 'pointer-events-none' : ''}`}
-                  placeholder={passwordFocused || password ? '' : 'Enter your password'}
-                  autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
-                  disabled={isFirstTimeUser ? !emailValidation.isValid : false}
+                  style={{ paddingLeft: '2.0rem', paddingRight: isRegisterMode ? '3.5rem' : '3.0rem' }}
+                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isRegisterMode && !emailValidation.isValid ? 'pointer-events-none' : ''}`}
+                  placeholder={passwordFocused || password ? '' : '••••••••'}
+                  autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                  disabled={isRegisterMode ? !emailValidation.isValid : false}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 text-white/60 hover:text-white transition-colors duration-200"
-                  style={{ right: isFirstTimeUser && password ? '2.5rem' : '0.75rem' }}
+                  style={{ right: isRegisterMode && password ? '2.5rem' : '0.75rem' }}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
-                {isFirstTimeUser && password && (
+                {isRegisterMode && password && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -349,7 +349,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               </div>
               
               {/* Password Requirements Tooltip */}
-              {isFirstTimeUser && showPasswordHelp && password && (
+              {isRegisterMode && showPasswordHelp && password && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
