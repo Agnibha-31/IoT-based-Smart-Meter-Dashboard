@@ -10,7 +10,7 @@ router.get(
   '/',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const devices = await listDevices();
+    const devices = await listDevices(req.user.id);
     res.json({ devices });
   }),
 );
@@ -25,11 +25,8 @@ router.post(
   '/',
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin role required' });
-    }
     const payload = createSchema.parse(req.body);
-    const device = await createDevice(payload);
+    const device = await createDevice({ ...payload, userId: req.user.id });
     res.status(201).json({ device });
   }),
 );

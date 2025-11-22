@@ -4,15 +4,16 @@ import { db } from '../db.js';
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
 
-export const ensureDefaultDevice = async () => {
+export const ensureDefaultDevice = async (userId = null) => {
   const existing = await db.get('SELECT * FROM devices WHERE id = ?', [config.deviceDefaultId]);
   const timestamp = nowSeconds();
-  if (!existing) {
+  if (!existing && userId) {
     await db.run(
-      `INSERT INTO devices (id, name, api_key, timezone, location, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO devices (id, user_id, name, api_key, timezone, location, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         config.deviceDefaultId,
+        userId,
         'Primary Smart Meter',
         config.deviceApiKey,
         'UTC',
@@ -22,6 +23,14 @@ export const ensureDefaultDevice = async () => {
       ],
     );
     return db.get('SELECT * FROM devices WHERE id = ?', [config.deviceDefaultId]);
+  }
+  
+  // If device exists but has no user_id, assign it to the provided user
+  if (existing && !existing.user_id && userId) {
+    await db.run(
+      'UPDATE devices SET user_id = ?, updated_at = ? WHERE id = ?',
+      [userId, timestamp, config.deviceDefaultId],
+    );
   }
 
   if (existing.api_key !== config.deviceApiKey) {
@@ -34,17 +43,24 @@ export const ensureDefaultDevice = async () => {
   return db.get('SELECT * FROM devices WHERE id = ?', [config.deviceDefaultId]);
 };
 
-export const listDevices = async () =>
-  db.all('SELECT * FROM devices ORDER BY created_at DESC');
+export const listDevices = async (userId = null) => {
+  if (userId) {
+    return db.all('SELECT * FROM devices WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+  }
+  return db.all('SELECT * FROM devices ORDER BY created_at DESC');
+};
 
-export const createDevice = async ({ name, timezone = 'UTC', location = 'US-NY' }) => {
+export const createDevice = async ({ userId, name, timezone = 'UTC', location = 'US-NY' }) => {
+  if (!userId) {
+    throw new Error('userId is required to create a device');
+  }
   const id = `dev-${randomUUID()}`;
   const apiKey = randomUUID();
   const timestamp = nowSeconds();
   await db.run(
-    `INSERT INTO devices (id, name, api_key, timezone, location, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [id, name, apiKey, timezone, location, timestamp, timestamp],
+    `INSERT INTO devices (id, user_id, name, api_key, timezone, location, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, userId, name, apiKey, timezone, location, timestamp, timestamp],
   );
   return db.get('SELECT * FROM devices WHERE id = ?', [id]);
 };
@@ -57,5 +73,13 @@ export const updateDeviceLastSeen = async (deviceId, timestamp = nowSeconds()) =
     'UPDATE devices SET last_seen = ?, updated_at = ? WHERE id = ?',
     [timestamp, timestamp, deviceId],
   );
+};
+
+export const getDeviceByIdAndUser = async (deviceId, userId) => {
+  return db.get('SELECT * FROM devices WHERE id = ? AND user_id = ?', [deviceId, userId]);
+};
+
+export const getUserDevices = async (userId) => {
+  return db.all('SELECT * FROM devices WHERE user_id = ? ORDER BY created_at DESC', [userId]);
 };
 

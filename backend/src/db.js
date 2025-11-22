@@ -65,13 +65,15 @@ const bootstrap = () => {
 
     CREATE TABLE IF NOT EXISTS devices (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
       name TEXT NOT NULL,
       api_key TEXT UNIQUE NOT NULL,
       timezone TEXT DEFAULT 'UTC',
       location TEXT DEFAULT 'US-NY',
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
-      last_seen INTEGER
+      last_seen INTEGER,
+      FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS readings (
@@ -137,8 +139,21 @@ const bootstrap = () => {
     if (!hasColumn('users', 'data_retention')) {
       database.run("ALTER TABLE users ADD COLUMN data_retention TEXT DEFAULT '1year'");
     }
+    
+    // Add user_id to devices table for multi-user support
+    if (!hasColumn('devices', 'user_id')) {
+      // First, get the first user's ID (for existing devices)
+      const firstUser = fetchOne('SELECT id FROM users LIMIT 1', []);
+      if (firstUser) {
+        database.run(`ALTER TABLE devices ADD COLUMN user_id TEXT`);
+        database.run(`UPDATE devices SET user_id = ? WHERE user_id IS NULL`, [firstUser.id]);
+      } else {
+        database.run(`ALTER TABLE devices ADD COLUMN user_id TEXT`);
+      }
+    }
   } catch (e) {
     // Ignore migration errors to avoid boot failures
+    console.error('Migration error:', e.message);
   }
 };
 

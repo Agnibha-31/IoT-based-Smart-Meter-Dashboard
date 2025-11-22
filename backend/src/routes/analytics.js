@@ -13,6 +13,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const { from, to, durationSeconds } = resolveRange({
       period: req.query.period,
       from: req.query.from,
@@ -40,6 +48,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const { from, to, durationSeconds } = resolveRange({
       period: req.query.period,
       from: req.query.from,
@@ -69,6 +85,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const { from, to } = resolveRange({
       period: req.query.period || 'month',
       from: req.query.from,

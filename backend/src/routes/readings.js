@@ -54,6 +54,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const reading = await latestReading(deviceId);
     res.json({ reading });
   }),
@@ -64,6 +72,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const { from, to, durationSeconds } = resolveRange({
       period: req.query.period,
       from: req.query.from,
@@ -99,6 +115,14 @@ router.delete(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const before = Number(req.query.before) || Math.floor(Date.now() / 1000);
     await deleteReadingsBefore(deviceId, before);
     res.json({ success: true });
@@ -110,6 +134,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const { db } = await import('../db.js');
     
     // Get total count

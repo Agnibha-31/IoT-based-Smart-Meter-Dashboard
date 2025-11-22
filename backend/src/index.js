@@ -79,7 +79,27 @@ app.use((err, req, res, next) => {
 
 const bootstrap = async () => {
   await db.init();
-  await ensureDefaultDevice();
+  
+  // Check if there are any users - if yes, system is already set up
+  const userCount = await db.get('SELECT COUNT(*) as total FROM users');
+  if (userCount && userCount.total > 0) {
+    console.log(`Multi-user system ready with ${userCount.total} user(s)`);
+  } else {
+    console.log('No users found - waiting for first user registration');
+  }
+  
+  // Ensure default device exists if there's a legacy setup
+  // This is for backward compatibility with single-user setups
+  const existingDevice = await db.get('SELECT * FROM devices WHERE id = ?', [config.deviceDefaultId]);
+  if (existingDevice && !existingDevice.user_id) {
+    // Assign orphaned device to first user if exists
+    const firstUser = await db.get('SELECT id FROM users LIMIT 1');
+    if (firstUser) {
+      await db.run('UPDATE devices SET user_id = ? WHERE id = ?', [firstUser.id, config.deviceDefaultId]);
+      console.log(`Assigned default device to user ${firstUser.id}`);
+    }
+  }
+  
   app.listen(config.port, () => {
     console.log(`Smart Meter backend ready on http://localhost:${config.port}`);
   });

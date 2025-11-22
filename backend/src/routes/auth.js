@@ -46,10 +46,7 @@ const registerSchema = z.object({
 router.post(
   '/register',
   asyncHandler(async (req, res) => {
-    // Only allow first user to register
-    if (await countUsers()) {
-      return res.status(403).json({ error: 'Registration is disabled' });
-    }
+    // Allow multiple users to register
     const payload = registerSchema.parse(req.body);
     const existing = await findUserByEmail(payload.email);
     if (existing) {

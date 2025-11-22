@@ -78,6 +78,14 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const metrics = filterMetrics(req.query.metrics?.split(','));
     const sampling = req.query.sampling || '5min';
     const { from, to } = resolveRange({
@@ -105,6 +113,14 @@ router.get(
   asyncHandler(async (req, res) => {
     const format = (req.query.format || 'csv').toLowerCase();
     const deviceId = req.query.device_id || config.deviceDefaultId;
+    
+    // Verify device belongs to user
+    const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
+    const device = await getDeviceByIdAndUser(deviceId, req.user.id);
+    if (!device) {
+      return res.status(403).json({ error: 'Access denied to this device' });
+    }
+    
     const metrics = filterMetrics(req.query.metrics?.split(','));
     const sampling = req.query.sampling || 'all';
     const includeMetadata = req.query.include_metadata === 'true';

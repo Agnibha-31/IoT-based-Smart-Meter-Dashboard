@@ -93,6 +93,16 @@ export const createUser = async ({
       now,
     ],
   );
+  
+  // Automatically create a default device for the new user
+  const { createDevice } = await import('./deviceService.js');
+  await createDevice({
+    userId,
+    name: 'Primary Smart Meter',
+    timezone,
+    location,
+  });
+  
   return findUserById(userId);
 };
 
