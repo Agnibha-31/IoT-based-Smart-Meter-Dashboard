@@ -25,22 +25,91 @@ export default function EnergyPage() {
   const [energyData, setEnergyData] = useState<EnergyPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Live energy statistics tracking (resets on page load/refresh)
+  const [liveEnergyStats, setLiveEnergyStats] = useState({
+    energyReadings: [] as { energy: number; timestamp: number; hour: number }[],
+    peakEnergy: 0,
+    offPeakEnergy: 0,
+    shoulderEnergy: 0,
+    renewableEnergy: 0,
+    totalTracked: 0,
+    dailyPeak: 0
+  });
 
-  // Fetch latest live reading for header metric
+  // Fetch latest live reading and track energy statistics by time of day
   useEffect(() => {
     let unsub = () => {};
+    let previousEnergy = 0;
+    
+    const updateEnergyStats = (reading: LiveReading) => {
+      const currentEnergy = reading.energy_kwh ?? reading.total_energy_kwh ?? 0;
+      const timestamp = (reading.captured_at ?? reading.created_at ?? Math.floor(Date.now() / 1000)) * 1000;
+      const hour = new Date(timestamp).getHours();
+      
+      setLiveEnergy(currentEnergy);
+      
+      // Calculate energy delta from previous reading
+      const energyDelta = previousEnergy > 0 ? Math.max(0, currentEnergy - previousEnergy) : 0;
+      previousEnergy = currentEnergy;
+      
+      if (energyDelta > 0 || currentEnergy > 0) {
+        setLiveEnergyStats(prev => {
+          const newReading = { energy: currentEnergy, timestamp, hour };
+          const newReadings = [...prev.energyReadings, newReading];
+          
+          // Classify energy by time of day
+          // Peak: 17:00-22:00 (5 PM - 10 PM)
+          // Off-Peak: 00:00-06:00 (12 AM - 6 AM)
+          // Shoulder: Everything else
+          // Renewable: 10:00-16:00 (10 AM - 4 PM) - solar hours
+          let peakEnergy = prev.peakEnergy;
+          let offPeakEnergy = prev.offPeakEnergy;
+          let shoulderEnergy = prev.shoulderEnergy;
+          let renewableEnergy = prev.renewableEnergy;
+          
+          if (energyDelta > 0) {
+            if (hour >= 17 && hour < 22) {
+              peakEnergy += energyDelta;
+            } else if (hour >= 0 && hour < 6) {
+              offPeakEnergy += energyDelta;
+            } else {
+              shoulderEnergy += energyDelta;
+            }
+            
+            // Track renewable energy (solar hours)
+            if (hour >= 10 && hour < 16) {
+              renewableEnergy += energyDelta;
+            }
+          }
+          
+          const totalTracked = peakEnergy + offPeakEnergy + shoulderEnergy;
+          const dailyPeak = Math.max(...newReadings.map(r => r.energy));
+          
+          return {
+            energyReadings: newReadings,
+            peakEnergy,
+            offPeakEnergy,
+            shoulderEnergy,
+            renewableEnergy,
+            totalTracked,
+            dailyPeak
+          };
+        });
+      }
+    };
+    
     fetchLatest().then(r => {
       const reading = (r as any)?.reading as LiveReading | undefined;
-      if (reading && typeof reading.energy_kwh === 'number') {
-        setLiveEnergy(reading.energy_kwh);
-      } else if (reading && typeof reading.total_energy_kwh === 'number') {
-        setLiveEnergy(reading.total_energy_kwh);
+      if (reading) {
+        updateEnergyStats(reading);
       }
     }).catch(() => {});
+    
     unsub = subscribeToLiveReadings(lr => {
-      if (typeof lr.energy_kwh === 'number') setLiveEnergy(lr.energy_kwh);
-      else if (typeof lr.total_energy_kwh === 'number') setLiveEnergy(lr.total_energy_kwh);
+      updateEnergyStats(lr);
     });
+    
     return () => unsub();
   }, []);
 
@@ -116,38 +185,49 @@ export default function EnergyPage() {
   ];
 
   const totalEnergy = summary?.totals?.energy_kwh ?? 0;
-  const offPeakPct = summary?.energySplit?.offPeak ?? 0;
-  const renewablePct = summary?.renewableShare ?? 0;
-  const dailyPeakEnergy = energyData.length ? Math.max(...energyData.map(d => d.energy)) : 0;
+  const historicalOffPeakPct = summary?.energySplit?.offPeak ?? 0;
+  const historicalRenewablePct = summary?.renewableShare ?? 0;
+  const historicalDailyPeak = energyData.length ? Math.max(...energyData.map(d => d.energy)) : 0;
+  
+  // Use live calculated values when available, otherwise fall back to historical
+  const dailyPeakEnergy = liveEnergyStats.dailyPeak > 0 ? liveEnergyStats.dailyPeak : historicalDailyPeak;
+  
+  const offPeakEnergy = liveEnergyStats.totalTracked > 0 
+    ? liveEnergyStats.offPeakEnergy 
+    : (totalEnergy * historicalOffPeakPct / 100);
+  
+  const renewablePct = liveEnergyStats.totalTracked > 0
+    ? (liveEnergyStats.renewableEnergy / liveEnergyStats.totalTracked * 100)
+    : historicalRenewablePct;
 
   const stats = [
     {
       label: 'Current Energy',
-      value: (liveEnergy || totalEnergy).toFixed(2),
-      unit: 'kWh',
+      value: ((liveEnergy || totalEnergy) * 1000).toFixed(0),
+      unit: 'Wh',
       icon: Battery,
       color: 'from-orange-500 to-red-500',
       change: ''
     },
     {
       label: 'Daily Peak',
-      value: dailyPeakEnergy.toFixed(2),
-      unit: 'kWh',
+      value: (dailyPeakEnergy * 1000).toFixed(0),
+      unit: 'Wh',
       icon: TrendingUp,
       color: 'from-red-500 to-pink-500',
       change: ''
     },
     {
       label: 'Off-Peak Usage',
-      value: (totalEnergy * offPeakPct / 100).toFixed(2),
-      unit: 'kWh',
+      value: (offPeakEnergy * 1000).toFixed(0),
+      unit: 'Wh',
       icon: Clock,
       color: 'from-blue-500 to-cyan-500',
       change: ''
     },
     {
       label: 'Renewable %',
-      value: renewablePct.toFixed(2),
+      value: renewablePct.toFixed(1),
       unit: '%',
       icon: Leaf,
       color: 'from-green-500 to-emerald-500',
