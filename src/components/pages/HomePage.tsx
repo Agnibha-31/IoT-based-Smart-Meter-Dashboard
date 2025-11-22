@@ -38,18 +38,16 @@ export default function HomePage() {
         };
         setLiveData(newData);
         
-        // Add to live chart data
+        // Add to live chart data - start accumulating from first point
         const chartPoint = {
-          time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           timestamp: ts,
           voltage: parseFloat((newData.voltage).toFixed(2)),
           current: parseFloat((newData.current).toFixed(3)),
           power: parseFloat((newData.power).toFixed(3)),
           energy: parseFloat((newData.energy).toFixed(4))
         };
-        // Keep only data from last 1 hour
-        const oneHourAgo = Date.now() - (60 * 60 * 1000);
-        setLiveChartData(prev => [...prev.filter(p => p.timestamp > oneHourAgo), chartPoint]);
+        setLiveChartData([chartPoint]);
       }
     }).catch(() => {});
     
@@ -66,18 +64,24 @@ export default function HomePage() {
       };
       setLiveData(newData);
       
-      // Add to live chart data (keep only last 1 hour)
+      // Add to live chart data - accumulate all points during this session
       const chartPoint = {
-        time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         timestamp: ts,
         voltage: parseFloat((newData.voltage).toFixed(2)),
         current: parseFloat((newData.current).toFixed(3)),
         power: parseFloat((newData.power).toFixed(3)),
         energy: parseFloat((newData.energy).toFixed(4))
       };
-      // Keep only data from last 1 hour
-      const oneHourAgo = Date.now() - (60 * 60 * 1000);
-      setLiveChartData(prev => [...prev.filter(p => p.timestamp > oneHourAgo), chartPoint]);
+      
+      setLiveChartData(prev => {
+        // Avoid duplicate timestamps
+        const filtered = prev.filter(p => Math.abs(p.timestamp - ts) > 1000);
+        // Keep all points from session start, limit to reasonable number for performance
+        const updated = [...filtered, chartPoint];
+        // Keep last 200 points max (or adjust based on needs)
+        return updated.length > 200 ? updated.slice(-200) : updated;
+      });
     });
     
     return () => unsub();
@@ -368,7 +372,8 @@ export default function HomePage() {
                     fontSize={11}
                     tick={{ fill: '#9ca3af' }}
                     tickMargin={8}
-                    interval="preserveStartEnd"
+                    interval="preserveStart"
+                    minTickGap={30}
                   />
                   <YAxis 
                     stroke="#9ca3af" 
@@ -407,16 +412,17 @@ export default function HomePage() {
                     type="monotone"
                     dataKey={selectedMetric}
                     stroke={getChartColor(selectedMetric)}
-                    strokeWidth={3}
+                    strokeWidth={2}
                     fill={`url(#color${selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1)})`}
                     dot={{ 
                       fill: getChartColor(selectedMetric), 
                       strokeWidth: 2, 
-                      r: 4,
+                      r: 3,
                       stroke: '#1f2937'
                     }}
+                    isAnimationActive={false}
                     activeDot={{ 
-                      r: 7, 
+                      r: 6, 
                       stroke: getChartColor(selectedMetric), 
                       strokeWidth: 3,
                       fill: '#ffffff'
