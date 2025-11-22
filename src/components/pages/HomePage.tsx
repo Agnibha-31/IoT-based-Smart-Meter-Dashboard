@@ -19,6 +19,20 @@ export default function HomePage() {
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
   const summaryResult = useTelemetrySummary({ period: 'day' });
   const [selectedMetric, setSelectedMetric] = useState('voltage');
+  
+  // Live statistics tracking for all metrics (session-based)
+  const [liveHomeStats, setLiveHomeStats] = useState({
+    voltageReadings: [] as number[],
+    currentReadings: [] as number[],
+    powerReadings: [] as number[],
+    energyReadings: [] as number[],
+    avgVoltage: 0,
+    avgCurrent: 0,
+    avgPower: 0,
+    peakVoltage: 0,
+    peakCurrent: 0,
+    peakPower: 0
+  });
 
   useEffect(() => {
     let unsub = () => {};
@@ -64,6 +78,29 @@ export default function HomePage() {
       };
       setLiveData(newData);
       
+      // Track live statistics for all metrics
+      if (newData.voltage > 0 || newData.current > 0) {
+        setLiveHomeStats(prev => {
+          const newVoltageReadings = [...prev.voltageReadings, newData.voltage];
+          const newCurrentReadings = [...prev.currentReadings, newData.current];
+          const newPowerReadings = [...prev.powerReadings, newData.power];
+          const newEnergyReadings = [...prev.energyReadings, newData.energy];
+          
+          return {
+            voltageReadings: newVoltageReadings,
+            currentReadings: newCurrentReadings,
+            powerReadings: newPowerReadings,
+            energyReadings: newEnergyReadings,
+            avgVoltage: newVoltageReadings.reduce((a, b) => a + b, 0) / newVoltageReadings.length,
+            avgCurrent: newCurrentReadings.reduce((a, b) => a + b, 0) / newCurrentReadings.length,
+            avgPower: newPowerReadings.reduce((a, b) => a + b, 0) / newPowerReadings.length,
+            peakVoltage: Math.max(...newVoltageReadings),
+            peakCurrent: Math.max(...newCurrentReadings),
+            peakPower: Math.max(...newPowerReadings)
+          };
+        });
+      }
+      
       // Add to live chart data - accumulate all points during this session
       const chartPoint = {
         time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -96,42 +133,59 @@ export default function HomePage() {
     return `${sign}${delta.toFixed(1)}%`;
   };
 
+  // Intelligently blend live session stats with historical data for display
+  const displayVoltage = liveData.voltage;
+  const displayCurrent = liveData.current;
+  const displayPower = liveData.power;
+  const displayEnergy = liveData.energy;
+  
+  // Use live averages for comparison when available, otherwise use historical
+  const baselineVoltage = liveHomeStats.voltageReadings.length > 5 
+    ? liveHomeStats.avgVoltage 
+    : summaryResult.summary?.averages?.voltage;
+  const baselineCurrent = liveHomeStats.currentReadings.length > 5
+    ? liveHomeStats.avgCurrent
+    : summaryResult.summary?.averages?.current;
+  const baselinePower = liveHomeStats.powerReadings.length > 5
+    ? liveHomeStats.avgPower
+    : summaryResult.summary?.averages?.power_kw;
+  
   const metrics = [
     {
       key: 'voltage',
       label: translate('voltage'),
-      value: liveData.voltage.toFixed(2),
+      value: displayVoltage.toFixed(2),
       unit: translate('volts'),
       icon: Zap,
       color: 'from-blue-500 to-cyan-500',
-      change: formatChange(liveData.voltage, summaryResult.summary?.averages?.voltage)
+      change: formatChange(displayVoltage, baselineVoltage)
     },
     {
       key: 'current',
       label: translate('current'),
-      value: liveData.current.toFixed(2),
+      value: displayCurrent.toFixed(2),
       unit: translate('amperes'),
       icon: Activity,
       color: 'from-green-500 to-emerald-500',
-      change: formatChange(liveData.current, summaryResult.summary?.averages?.current)
+      change: formatChange(displayCurrent, baselineCurrent)
     },
     {
       key: 'power',
       label: translate('power'),
-      value: (liveData.power * 1000).toFixed(1),
+      value: (displayPower * 1000).toFixed(1),
       unit: translate('watts'),
       icon: Power,
       color: 'from-purple-500 to-violet-500',
-      change: formatChange(liveData.power, summaryResult.summary?.averages?.power_kw)
+      change: formatChange(displayPower, baselinePower)
     },
     {
       key: 'energy',
       label: translate('energy'),
-      value: (liveData.energy * 1000).toFixed(0),
+      value: (displayEnergy * 1000).toFixed(0),
       unit: translate('watt_hours'),
       icon: Battery,
       color: 'from-orange-500 to-red-500',
-      change: formatChange(liveData.energy, summaryResult.summary?.totals?.energy_kwh)
+      change: formatChange(displayEnergy, summaryResult.summary?.totals?.energy_kwh)
     }
   ];
 

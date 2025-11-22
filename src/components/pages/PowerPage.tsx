@@ -53,16 +53,60 @@ export default function PowerPage() {
   const [summary, setSummary] = useState<any>(null);
   const [historyPoints, setHistoryPoints] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  
+  // Live power statistics tracking (session-based, resets on reload)
+  const [livePowerStats, setLivePowerStats] = useState({
+    powerReadings: [] as { active: number; reactive: number; apparent: number; factor: number }[],
+    avgActivePower: 0,
+    peakActivePower: 0,
+    avgPowerFactor: 0,
+    totalConsumption: 0
+  });
 
   useEffect(() => {
     let unsub = () => {};
+    
+    const updatePowerStats = (lr: LiveReading | null) => {
+      if (!lr) return;
+      
+      const snapshot = deriveSnapshot(lr);
+      setLivePower(snapshot);
+      
+      // Track statistics from live readings
+      if (snapshot.active > 0) {
+        setLivePowerStats(prev => {
+          const newReadings = [...prev.powerReadings, {
+            active: snapshot.active,
+            reactive: snapshot.reactive,
+            apparent: snapshot.apparent,
+            factor: snapshot.factor
+          }];
+          
+          // Calculate live averages
+          const avgActive = newReadings.reduce((sum, r) => sum + r.active, 0) / newReadings.length;
+          const peakActive = Math.max(...newReadings.map(r => r.active));
+          const avgPF = newReadings.reduce((sum, r) => sum + r.factor, 0) / newReadings.length;
+          const totalCons = newReadings.reduce((sum, r) => sum + r.active, 0) / 1000; // Convert to kWh estimate
+          
+          return {
+            powerReadings: newReadings,
+            avgActivePower: avgActive,
+            peakActivePower: peakActive,
+            avgPowerFactor: avgPF,
+            totalConsumption: totalCons
+          };
+        });
+      }
+    };
+    
     fetchLatest()
       .then((r) => {
         const lr = (r?.reading as LiveReading) || null;
-        if (lr) setLivePower(deriveSnapshot(lr));
+        updatePowerStats(lr);
       })
       .catch(() => {});
-    unsub = subscribeToLiveReadings((lr) => setLivePower(deriveSnapshot(lr)));
+      
+    unsub = subscribeToLiveReadings((lr) => updatePowerStats(lr));
     return () => unsub();
   }, []);
 
@@ -107,40 +151,51 @@ export default function PowerPage() {
     ];
   }, [summary, translate, livePower]);
 
-  const stats = useMemo(() => ([
-    {
-      labelKey: 'active_power',
-      value: ((summary?.averages?.power_kw ?? livePower.active / 1000) * 1000).toFixed(1),
-      unit: translate('watts'),
-      icon: Power,
-      color: 'from-purple-500 to-violet-500',
-      status: 'excellent',
-    },
-    {
-      labelKey: 'reactive_power',
-      value: livePower.reactive.toFixed(1),
-      unit: translate('var'),
-      icon: Cpu,
-      color: 'from-cyan-500 to-blue-500',
-      status: 'good',
-    },
-    {
-      labelKey: 'apparent_power',
-      value: livePower.apparent.toFixed(1),
-      unit: translate('va'),
-      icon: Gauge,
-      color: 'from-green-500 to-emerald-500',
-      status: 'high',
-    },
-    {
-      labelKey: 'power_factor',
-      value: (summary?.averages?.pf ?? livePower.factor).toFixed(3),
-      unit: '',
-      icon: BarChart3,
-      color: 'from-orange-500 to-red-500',
-      status: (summary?.averages?.pf ?? livePower.factor) > 0.9 ? 'optimal' : 'normal',
-    },
-  ]), [summary, livePower, translate]);
+  const stats = useMemo(() => {
+    // Intelligently combine live session stats with historical data
+    const avgActivePower = livePowerStats.powerReadings.length > 0 
+      ? livePowerStats.avgActivePower 
+      : ((summary?.averages?.power_kw ?? livePower.active / 1000) * 1000);
+    
+    const avgPowerFactor = livePowerStats.powerReadings.length > 0
+      ? livePowerStats.avgPowerFactor
+      : (summary?.averages?.pf ?? livePower.factor);
+    
+    return [
+      {
+        labelKey: 'active_power',
+        value: avgActivePower.toFixed(1),
+        unit: translate('watts'),
+        icon: Power,
+        color: 'from-purple-500 to-violet-500',
+        status: 'excellent',
+      },
+      {
+        labelKey: 'reactive_power',
+        value: livePower.reactive.toFixed(1),
+        unit: translate('var'),
+        icon: Cpu,
+        color: 'from-cyan-500 to-blue-500',
+        status: 'good',
+      },
+      {
+        labelKey: 'apparent_power',
+        value: livePower.apparent.toFixed(1),
+        unit: translate('va'),
+        icon: Gauge,
+        color: 'from-green-500 to-emerald-500',
+        status: 'high',
+      },
+      {
+        labelKey: 'power_factor',
+        value: avgPowerFactor.toFixed(3),
+        unit: '',
+        icon: BarChart3,
+        color: 'from-orange-500 to-red-500',
+        status: avgPowerFactor > 0.9 ? 'optimal' : 'normal',
+      },
+    ];
+  }, [summary, livePower, livePowerStats, translate]);
 
   const historyData = useMemo(() => historyPoints.map((point) => {
     const label = new Date(point.timestamp * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit' });
