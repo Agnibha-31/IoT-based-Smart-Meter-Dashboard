@@ -108,20 +108,38 @@ export default function DeviceConfigPage() {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      const data = await response.json();
       
-      // Update local state
-      setDevices(prev => prev.map(d => d.id === deviceId ? data.device : d));
+      if (!response.ok) {
+        throw new Error('Failed to regenerate API key');
+      }
+      
+      const data = await response.json();
+      console.log('Regenerated device data:', data.device);
+      
+      // Force state updates with new object references
+      const updatedDevice = { ...data.device };
+      
+      setDevices(prev => {
+        const newDevices = prev.map(d => d.id === deviceId ? updatedDevice : d);
+        console.log('Updated devices:', newDevices);
+        return newDevices;
+      });
+      
       if (selectedDevice?.id === deviceId) {
-        setSelectedDevice(data.device);
-        await fetchESP32Config(deviceId);
+        console.log('Updating selected device with new API key:', updatedDevice.api_key);
+        setSelectedDevice(updatedDevice);
+        // Clear and refresh ESP32 config
+        setEsp32Config(null);
+        setEsp32Code('');
+        setShowESP32Code(false);
       }
       
       // Automatically show the new API key so user can see it changed
       setShowApiKey(prev => ({ ...prev, [deviceId]: true }));
       
-      toast.success('API key regenerated successfully! New key is now visible.');
+      toast.success(`API key regenerated! New key: ${updatedDevice.api_key.substring(0, 8)}...`);
     } catch (error) {
+      console.error('Regenerate error:', error);
       toast.error('Failed to regenerate API key');
     } finally {
       setRegenerating(null);
