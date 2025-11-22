@@ -12,7 +12,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Power, TrendingUp, Cpu, Gauge, BarChart3, Zap } from 'lucide-react';
+import { Power, TrendingUp, Cpu, Gauge, BarChart3, Zap, AlertTriangle } from 'lucide-react';
 import { useSettings } from '../SettingsContext';
 import { subscribeToLiveReadings, fetchLatest, type LiveReading } from '../../utils/liveApi';
 import { fetchSummary as fetchSummaryApi, fetchHistory } from '../../utils/apiClient';
@@ -394,8 +394,17 @@ export default function PowerPage() {
           </div>
 
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+            {powerDistribution.every(d => d.value === 0) ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
                 <Pie
                   data={powerDistribution}
                   cx="50%"
@@ -420,7 +429,8 @@ export default function PowerPage() {
                   formatter={(value, name) => [`${Number(value).toFixed(2)} %`, name]}
                 />
               </PieChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="mt-6 space-y-2">
@@ -469,8 +479,17 @@ export default function PowerPage() {
           </div>
 
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historyData}>
+            {historyData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={historyData}>
                 <defs>
                   <linearGradient id="powerGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={metrics.find((m) => m.key === selectedMetric)?.color} stopOpacity={0.3} />
@@ -512,7 +531,8 @@ export default function PowerPage() {
                   fill="url(#powerGradient)"
                 />
               </LineChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
       </div>

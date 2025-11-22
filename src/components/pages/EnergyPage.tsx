@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Battery, TrendingUp, Calendar, Clock, Leaf, Zap } from 'lucide-react';
+import { Battery, TrendingUp, Calendar, Clock, Leaf, Zap, AlertTriangle } from 'lucide-react';
 import { useSettings } from '../SettingsContext';
 import { subscribeToLiveReadings, fetchLatest, type LiveReading } from '../../utils/liveApi';
 import { fetchSummary, fetchHistory } from '../../utils/apiClient';
@@ -451,8 +451,17 @@ export default function EnergyPage() {
           </div>
           
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={energyData}>
+            {energyData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={energyData}>
                 <defs>
                   <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
@@ -496,7 +505,8 @@ export default function EnergyPage() {
                   fill="url(#renewableGradient)"
                 />
               </AreaChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
       </div>

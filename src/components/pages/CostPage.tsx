@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { DollarSign, Calculator, TrendingUp, Clock, Zap, Receipt, RefreshCw } from 'lucide-react';
+import { DollarSign, Calculator, TrendingUp, Clock, Zap, Receipt, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useSettings, CURRENCIES } from '../SettingsContext';
 import { useLiveCurrency } from '../../utils/useLiveCurrency';
 import { useElectricityRate } from '../../utils/useElectricityRate';
@@ -437,8 +437,17 @@ export default function CostPage({ liveData }: CostPageProps) {
           </div>
           
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={costData}>
+            {costData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={costData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
                 <YAxis stroke="#9ca3af" fontSize={12} />
@@ -454,7 +463,8 @@ export default function CostPage({ liveData }: CostPageProps) {
                 <Line type="monotone" dataKey="peakCost" stroke="#ef4444" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="offPeakCost" stroke="#3b82f6" strokeWidth={2} dot={false} />
               </LineChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
       </div>

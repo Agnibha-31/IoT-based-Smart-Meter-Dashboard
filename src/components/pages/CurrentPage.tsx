@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Activity, TrendingUp, Gauge, Zap, BarChart3 } from 'lucide-react';
+import { Activity, TrendingUp, Gauge, Zap, BarChart3, AlertTriangle } from 'lucide-react';
 import { useSettings } from '../SettingsContext';
 import { subscribeToLiveReadings, fetchLatest, type LiveReading } from '../../utils/liveApi';
 import { useTelemetryHistory, useTelemetrySummary } from '../../hooks/useTelemetry';
@@ -367,9 +367,19 @@ export default function CurrentPage() {
           </div>
           
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              {renderChart()}
-            </ResponsiveContainer>
+            {historicalData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                {renderChart()}
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
       </div>

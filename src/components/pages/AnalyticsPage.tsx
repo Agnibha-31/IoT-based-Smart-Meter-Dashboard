@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, RadialBarChart, RadialBar 
 } from 'recharts';
-import { BarChart3, TrendingUp, Zap, Activity, Power, Battery, Calendar, Clock } from 'lucide-react';
+import { BarChart3, TrendingUp, Zap, Activity, Power, Battery, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import { useSettings } from '../SettingsContext';
 import { useTelemetrySummary } from '../../hooks/useTelemetry';
 
@@ -328,9 +328,19 @@ export default function AnalyticsPage() {
           </div>
           
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              {renderChart()}
-            </ResponsiveContainer>
+            {analyticsData.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                {renderChart()}
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
       </div>
@@ -346,8 +356,17 @@ export default function AnalyticsPage() {
         >
           <h3 className="text-white text-lg font-medium mb-6">Performance Score</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadialBarChart data={performanceData}>
+            {performanceData.length === 0 || performanceData.every(d => d.value === 0) ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart data={performanceData}>
                 <RadialBar dataKey="value" cornerRadius={10} fill="#8884d8" />
                 <Tooltip 
                   contentStyle={{
@@ -358,7 +377,8 @@ export default function AnalyticsPage() {
                   }}
                 />
               </RadialBarChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
 
@@ -371,8 +391,17 @@ export default function AnalyticsPage() {
         >
           <h3 className="text-white text-lg font-medium mb-6">Usage Distribution</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+            {distributionData.length === 0 || distributionData.every(d => d.value === 0) ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-lg font-medium">No Data Present</p>
+                  <p className="text-gray-500 text-sm mt-2">Graph will be updated after successful data logging</p>
+                </div>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
                 <Pie
                   data={distributionData}
                   cx="50%"
@@ -394,7 +423,8 @@ export default function AnalyticsPage() {
                   }}
                 />
               </PieChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
         </motion.div>
       </div>
