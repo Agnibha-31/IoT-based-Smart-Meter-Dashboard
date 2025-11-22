@@ -115,35 +115,44 @@ export default function DeviceConfigPage() {
       }
       
       const data = await response.json();
+      const newApiKey = data.device.api_key;
+      
+      console.log('=== API KEY REGENERATION ===');
       console.log('OLD API Key:', selectedDevice?.api_key);
-      console.log('NEW API Key:', data.device.api_key);
-      console.log('Keys are different:', selectedDevice?.api_key !== data.device.api_key);
+      console.log('NEW API Key:', newApiKey);
+      console.log('Backend confirms different:', selectedDevice?.api_key !== newApiKey);
       
-      // Force state updates with new object references
-      const updatedDevice = { ...data.device };
-      
-      setDevices(prev => {
-        const newDevices = prev.map(d => d.id === deviceId ? updatedDevice : d);
-        console.log('Updated devices array');
-        return newDevices;
+      // Refetch all devices from backend to ensure we have the latest data
+      const tokenRefresh = localStorage.getItem('smartmeter_token');
+      const refreshResponse = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/devices`, {
+        headers: { Authorization: `Bearer ${tokenRefresh}` }
       });
+      const refreshData = await refreshResponse.json();
+      const freshDevices = refreshData.devices || [];
       
-      if (selectedDevice?.id === deviceId) {
-        console.log('Updating selected device...');
+      console.log('Fetched fresh devices from backend');
+      
+      // Update devices array with fresh data
+      setDevices(freshDevices);
+      
+      // Find and set the updated device
+      const updatedDevice = freshDevices.find((d: Device) => d.id === deviceId);
+      if (updatedDevice && selectedDevice?.id === deviceId) {
+        console.log('Setting selected device with new key:', updatedDevice.api_key);
         setSelectedDevice(updatedDevice);
-        // Clear and refresh ESP32 config
+        // Clear ESP32 config
         setEsp32Config(null);
         setEsp32Code('');
         setShowESP32Code(false);
       }
       
-      // Automatically show the new API key so user can see it changed
+      // Show the new API key
       setShowApiKey(prev => ({ ...prev, [deviceId]: true }));
       
-      // Force component re-render
+      // Force re-render
       setRenderKey(prev => prev + 1);
       
-      toast.success(`API key regenerated! New key: ${updatedDevice.api_key.substring(0, 8)}...`);
+      toast.success(`API key regenerated! New key: ${newApiKey.substring(0, 8)}...`);
     } catch (error) {
       console.error('Regenerate error:', error);
       toast.error('Failed to regenerate API key');
