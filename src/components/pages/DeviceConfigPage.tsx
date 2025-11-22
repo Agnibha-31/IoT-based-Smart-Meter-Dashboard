@@ -124,13 +124,43 @@ export default function DeviceConfigPage() {
     }
   };
 
-  const copyToClipboard = async (text: string, label: string) => {
+  const copyToClipboard = (text: string, label: string) => {
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          toast.success(`${label} copied to clipboard!`);
+        })
+        .catch(() => {
+          // Fallback to legacy method
+          fallbackCopyToClipboard(text, label);
+        });
+    } else {
+      // Use fallback for older browsers or non-secure contexts
+      fallbackCopyToClipboard(text, label);
+    }
+  };
+
+  const fallbackCopyToClipboard = (text: string, label: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
     try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard!`);
+      const successful = document.execCommand('copy');
+      if (successful) {
+        toast.success(`${label} copied to clipboard!`);
+      } else {
+        toast.error(`Failed to copy ${label}`);
+      }
     } catch (error) {
       toast.error(`Failed to copy ${label}`);
     }
+    document.body.removeChild(textArea);
   };
 
   const handleDeviceSelect = (device: Device) => {
