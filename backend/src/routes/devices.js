@@ -50,11 +50,15 @@ router.post(
   '/:deviceId/regenerate-key',
   requireAuth,
   asyncHandler(async (req, res) => {
+    console.log('📡 [API] Regenerate API key request for device:', req.params.deviceId);
     const device = await getDeviceByIdAndUser(req.params.deviceId, req.user.id);
     if (!device) {
+      console.log('❌ [API] Device not found or access denied');
       return res.status(404).json({ error: 'Device not found or access denied' });
     }
+    console.log('✅ [API] Device found, proceeding with regeneration');
     const updatedDevice = await regenerateDeviceApiKey(req.params.deviceId);
+    console.log('📤 [API] Sending response with api_key:', updatedDevice.api_key);
     res.json({ 
       device: updatedDevice,
       message: 'API key regenerated successfully. Update your ESP32 firmware with the new key.' 

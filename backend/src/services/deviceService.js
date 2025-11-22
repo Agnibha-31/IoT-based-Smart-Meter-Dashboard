@@ -84,12 +84,26 @@ export const getUserDevices = async (userId) => {
 };
 
 export const regenerateDeviceApiKey = async (deviceId) => {
+  console.log('🔄 [REGENERATE] Starting API key regeneration for device:', deviceId);
+  
+  // Get old key first
+  const oldDevice = await db.get('SELECT * FROM devices WHERE id = ?', [deviceId]);
+  console.log('🔑 [REGENERATE] OLD API Key:', oldDevice?.api_key);
+  
   const newApiKey = randomUUID();
+  console.log('🆕 [REGENERATE] NEW API Key generated:', newApiKey);
+  
   const timestamp = nowSeconds();
-  await db.run(
+  const result = await db.run(
     'UPDATE devices SET api_key = ?, updated_at = ? WHERE id = ?',
     [newApiKey, timestamp, deviceId],
   );
-  return db.get('SELECT * FROM devices WHERE id = ?', [deviceId]);
+  console.log('💾 [REGENERATE] Database UPDATE executed, rows affected:', result.changes);
+  
+  const updatedDevice = await db.get('SELECT * FROM devices WHERE id = ?', [deviceId]);
+  console.log('✅ [REGENERATE] Fetched updated device, api_key:', updatedDevice?.api_key);
+  console.log('🔍 [REGENERATE] Verification - Keys different:', oldDevice?.api_key !== updatedDevice?.api_key);
+  
+  return updatedDevice;
 };
 

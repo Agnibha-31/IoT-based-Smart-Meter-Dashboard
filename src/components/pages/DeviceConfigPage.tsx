@@ -99,16 +99,21 @@ export default function DeviceConfigPage() {
       return;
     }
     
+    console.log('🔵 [FRONTEND] Starting regeneration for device:', deviceId);
+    console.log('🔵 [FRONTEND] Current selected device API key:', selectedDevice?.api_key);
+    
     setRegenerating(deviceId);
     try {
       const token = localStorage.getItem('smartmeter_token');
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/devices/${deviceId}/regenerate-key`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const apiUrl = `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/devices/${deviceId}/regenerate-key`;
+      console.log('🔵 [FRONTEND] Calling API:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('🔵 [FRONTEND] Response status:', response.status);
       
       if (!response.ok) {
         throw new Error('Failed to regenerate API key');
@@ -117,12 +122,17 @@ export default function DeviceConfigPage() {
       const data = await response.json();
       const newApiKey = data.device.api_key;
       
-      console.log('=== API KEY REGENERATION ===');
-      console.log('OLD API Key:', selectedDevice?.api_key);
-      console.log('NEW API Key:', newApiKey);
-      console.log('Backend confirms different:', selectedDevice?.api_key !== newApiKey);
+      console.log('🔵 [FRONTEND] ========= REGENERATION RESPONSE =========');
+      console.log('🔵 [FRONTEND] OLD API Key:', selectedDevice?.api_key);
+      console.log('🔵 [FRONTEND] NEW API Key from backend:', newApiKey);
+      console.log('🔵 [FRONTEND] Keys are different:', selectedDevice?.api_key !== newApiKey);
+      console.log('🔵 [FRONTEND] Full device object:', data.device);
+      
+      // Small delay to ensure DB write is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Refetch all devices from backend to ensure we have the latest data
+      console.log('🔵 [FRONTEND] Refetching all devices...');
       const tokenRefresh = localStorage.getItem('smartmeter_token');
       const refreshResponse = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/devices`, {
         headers: { Authorization: `Bearer ${tokenRefresh}` }
@@ -130,15 +140,19 @@ export default function DeviceConfigPage() {
       const refreshData = await refreshResponse.json();
       const freshDevices = refreshData.devices || [];
       
-      console.log('Fetched fresh devices from backend');
+      console.log('🔵 [FRONTEND] Fresh devices count:', freshDevices.length);
+      const freshDevice = freshDevices.find((d: Device) => d.id === deviceId);
+      console.log('🔵 [FRONTEND] Fresh device API key:', freshDevice?.api_key);
+      console.log('🔵 [FRONTEND] Fresh key matches regenerated key:', freshDevice?.api_key === newApiKey);
       
       // Update devices array with fresh data
       setDevices(freshDevices);
+      console.log('🔵 [FRONTEND] Devices state updated');
       
       // Find and set the updated device
       const updatedDevice = freshDevices.find((d: Device) => d.id === deviceId);
       if (updatedDevice && selectedDevice?.id === deviceId) {
-        console.log('Setting selected device with new key:', updatedDevice.api_key);
+        console.log('🔵 [FRONTEND] Updating selectedDevice state with API key:', updatedDevice.api_key);
         setSelectedDevice(updatedDevice);
         // Clear ESP32 config
         setEsp32Config(null);
@@ -148,10 +162,15 @@ export default function DeviceConfigPage() {
       
       // Show the new API key
       setShowApiKey(prev => ({ ...prev, [deviceId]: true }));
+      console.log('🔵 [FRONTEND] Set showApiKey to true for device:', deviceId);
       
       // Force re-render
-      setRenderKey(prev => prev + 1);
+      setRenderKey(prev => {
+        console.log('🔵 [FRONTEND] Incrementing renderKey from', prev, 'to', prev + 1);
+        return prev + 1;
+      });
       
+      console.log('🔵 [FRONTEND] ========= REGENERATION COMPLETE =========');
       toast.success(`API key regenerated! New key: ${newApiKey.substring(0, 8)}...`);
     } catch (error) {
       console.error('Regenerate error:', error);
