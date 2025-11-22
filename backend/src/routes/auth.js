@@ -20,7 +20,8 @@ router.get(
   '/check-first-user',
   asyncHandler(async (req, res) => {
     const userCount = await countUsers();
-    res.json({ isFirstUser: userCount === 0 });
+    // Always return false to enable multi-user registration
+    res.json({ isFirstUser: false });
   }),
 );
 
@@ -33,9 +34,7 @@ const registerSchema = z.object({
 router.post(
   '/register',
   asyncHandler(async (req, res) => {
-    if (await countUsers()) {
-      return res.status(403).json({ error: 'Registration disabled after initial setup' });
-    }
+    // Multi-user support: Allow registration for all users
     const payload = registerSchema.parse(req.body);
     const existing = await findUserByEmail(payload.email);
     if (existing) {

@@ -20,26 +20,15 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState<boolean | null>(null);
+  const [isRegisterMode, setIsRegisterMode] = useState(false); // Toggle between login and register
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const debounceTimer = useRef<number | null>(null);
   const lastTried = useRef<{ email: string; password: string } | null>(null);
 
-  // Check if this is first time user (no users exist yet)
-  useEffect(() => {
-    const checkFirstTime = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/check-first-user`);
-        const data = await response.json();
-        setIsFirstTimeUser(data.isFirstUser || false);
-      } catch {
-        setIsFirstTimeUser(false);
-      }
-    };
-    checkFirstTime();
-  }, []);
+  // Multi-user system: Always start in login mode
+  // Users can switch to register mode via "Register Now" link
 
   // Full name validation - at least 2 words, each starting with capital letter
   const validateName = (fullName: string) => {
@@ -86,7 +75,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const passwordValidation = validatePassword(password);
   const isPasswordValid = Object.values(passwordValidation).every(v => v);
   const passwordsMatch = password === confirmPassword;
-  const isFormValid = isFirstTimeUser 
+  const isFormValid = isRegisterMode 
     ? (nameValidation.isValid && emailValidation.isValid && isPasswordValid && passwordsMatch)
     : (emailValidation.isValid && password.length >= 6);
 
@@ -96,18 +85,22 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
       setShowError('Please provide email and password');
       return;
     }
-    if (isFirstTimeUser && !name) {
+    if (isRegisterMode && !name) {
       setShowError('Please provide your name');
       return;
     }
-    if (isFirstTimeUser && !isPasswordValid) {
+    if (isRegisterMode && !isPasswordValid) {
       setShowError('Password does not meet requirements');
+      return;
+    }
+    if (isRegisterMode && !passwordsMatch) {
+      setShowError('Passwords do not match');
       return;
     }
     setShowError(null);
     setIsSubmitting(true);
     try {
-      if (isFirstTimeUser) {
+      if (isRegisterMode) {
         await onRegister({ email, password, name });
       } else {
         await onLogin({ email, password });
@@ -120,9 +113,9 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     }
   }
 
-  // Auto-authenticate for existing users only (not first-time registration)
+  // Auto-authenticate for existing users only (not for registration)
   useEffect(() => {
-    if (isFirstTimeUser) return; // Disable auto-login for registration
+    if (isRegisterMode) return; // Disable auto-login for registration mode
     
     if (debounceTimer.current) {
       window.clearTimeout(debounceTimer.current);
@@ -143,7 +136,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
         debounceTimer.current = null;
       }
     };
-  }, [email, password, isSubmitting, isFirstTimeUser]);
+  }, [email, password, isSubmitting, isRegisterMode]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 px-4">
@@ -194,11 +187,11 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-white/90 text-sm mb-6">
-                {isFirstTimeUser ? 'Create your admin account' : translate('enter_credentials')}
+                {isRegisterMode ? 'Create your account' : translate('enter_credentials')}
               </p>
             </div>
             
-            {isFirstTimeUser && (
+            {isRegisterMode && (
               <div className="relative">
                 <label className="block text-white/90 text-sm mb-2 text-center">Full Name</label>
                 <div className="relative w-4/5 mx-auto">
@@ -456,20 +449,75 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               </div>
             )}
 
-            {isFirstTimeUser && (
-              <motion.button
-                whileHover={{ scale: isFormValid ? 1.05 : 1 }}
-                whileTap={{ scale: isFormValid ? 0.95 : 1 }}
-                type="submit"
-                disabled={isSubmitting || !isFormValid}
-                className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
-                  isFormValid && !isSubmitting
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
-                    : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
-                }`}
+            <motion.button
+              whileHover={{ scale: isFormValid ? 1.05 : 1 }}
+              whileTap={{ scale: isFormValid ? 0.95 : 1 }}
+              type="submit"
+              disabled={isSubmitting || !isFormValid}
+              className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
+                isFormValid && !isSubmitting
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
+                  : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
+              }`}
+            >
+              {isSubmitting 
+                ? (isRegisterMode ? 'Creating Account...' : 'Logging in...') 
+                : (isRegisterMode ? 'Create Account' : 'Sign In')
+              }
+            </motion.button>
+
+            {/* Register/Login Toggle Link */}
+            {!isRegisterMode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-center pt-2"
               >
-                {isSubmitting ? 'Creating Account...' : 'Create Admin Account'}
-              </motion.button>
+                <p className="text-white/70 text-sm">
+                  Not a user?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsRegisterMode(true);
+                      setShowError(null);
+                      setPassword('');
+                      setConfirmPassword('');
+                      setName('');
+                    }}
+                    className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition-colors duration-200 cursor-pointer"
+                  >
+                    Register Now
+                  </button>
+                </p>
+              </motion.div>
+            )}
+
+            {/* Back to Login Link */}
+            {isRegisterMode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-center pt-2"
+              >
+                <p className="text-white/70 text-sm">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsRegisterMode(false);
+                      setShowError(null);
+                      setPassword('');
+                      setConfirmPassword('');
+                      setName('');
+                    }}
+                    className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition-colors duration-200 cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              </motion.div>
             )}
 
             {showError && (
