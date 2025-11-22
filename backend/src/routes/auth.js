@@ -24,6 +24,19 @@ router.get(
   }),
 );
 
+// Check if email already exists (for real-time validation during registration)
+router.post(
+  '/check-email',
+  asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    const existing = await findUserByEmail(email.trim());
+    res.json({ exists: !!existing });
+  }),
+);
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
