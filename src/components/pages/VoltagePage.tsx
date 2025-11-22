@@ -36,7 +36,8 @@ export default function VoltagePage() {
     voltageReadings: [] as number[],
     peakVoltage: 0,
     avgVoltage: 0,
-    lowVoltage: 0
+    lowVoltage: 0,
+    liveConsumptionVh: 0  // Accumulated live consumption in Vh
   });
 
   useEffect(() => {
@@ -50,11 +51,17 @@ export default function VoltagePage() {
           const low = Math.min(...newReadings);
           const avg = newReadings.reduce((sum, v) => sum + v, 0) / newReadings.length;
           
+          // Accumulate live consumption: Voltage (V) * time (h) = Vh
+          // Assume ~3 second intervals = 3/3600 h
+          const voltageDelta = voltage * (3 / 3600); // Vh per reading
+          const newLiveConsumption = prev.liveConsumptionVh + voltageDelta;
+          
           return {
             voltageReadings: newReadings,
             peakVoltage: peak,
             avgVoltage: avg,
-            lowVoltage: low
+            lowVoltage: low,
+            liveConsumptionVh: newLiveConsumption
           };
         });
       }
@@ -164,7 +171,7 @@ export default function VoltagePage() {
           <div>
             <h1 className="text-3xl font-medium text-white">{translate('voltage_monitoring')}</h1>
             <p className="text-gray-400">
-              {translate('total_consumption')}: {(summary?.totals?.voltage_vh ?? 0).toLocaleString()} V·h
+              {translate('total_consumption')}: {((summary?.totals?.voltage_vh ?? 0) + liveStats.liveConsumptionVh).toFixed(2)} V·h
             </p>
           </div>
         </div>

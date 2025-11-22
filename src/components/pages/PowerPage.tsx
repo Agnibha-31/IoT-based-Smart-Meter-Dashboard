@@ -60,7 +60,8 @@ export default function PowerPage() {
     avgActivePower: 0,
     peakActivePower: 0,
     avgPowerFactor: 0,
-    totalConsumption: 0
+    totalConsumption: 0,
+    liveConsumptionWh: 0  // Accumulated live consumption in Wh
   });
 
   useEffect(() => {
@@ -88,12 +89,18 @@ export default function PowerPage() {
           const avgPF = newReadings.reduce((sum, r) => sum + r.factor, 0) / newReadings.length;
           const totalCons = newReadings.reduce((sum, r) => sum + r.active, 0) / 1000; // Convert to kWh estimate
           
+          // Accumulate live consumption: assume ~1-5 second intervals between readings
+          // Power (W) * time (h) = Energy (Wh). Using 3 sec average = 3/3600 h
+          const energyDelta = snapshot.active * (3 / 3600); // Wh per reading
+          const newLiveConsumption = prev.liveConsumptionWh + energyDelta;
+          
           return {
             powerReadings: newReadings,
             avgActivePower: avgActive,
             peakActivePower: peakActive,
             avgPowerFactor: avgPF,
-            totalConsumption: totalCons
+            totalConsumption: totalCons,
+            liveConsumptionWh: newLiveConsumption
           };
         });
       }
@@ -227,7 +234,7 @@ export default function PowerPage() {
           <div>
             <h1 className="text-3xl font-medium text-white">{translate('power_analysis')}</h1>
             <p className="text-gray-400">
-              {translate('total_consumption')}: {((summary?.totals?.real_power_kwh ?? 0) * 1000).toFixed(0)} W·h
+              {translate('total_consumption')}: {(((summary?.totals?.real_power_kwh ?? 0) * 1000) + livePowerStats.liveConsumptionWh).toFixed(0)} W·h
             </p>
           </div>
         </div>

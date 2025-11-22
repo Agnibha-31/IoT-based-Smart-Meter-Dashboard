@@ -22,7 +22,8 @@ export default function CurrentPage() {
     rmsCurrent: 0,
     avgPower: 0,
     peakPower: 0,
-    loadFactor: 0
+    loadFactor: 0,
+    liveConsumptionAh: 0  // Accumulated live consumption in Ah
   });
 
   useEffect(() => {
@@ -51,6 +52,11 @@ export default function CurrentPage() {
           // Calculate load factor (average power / peak power)
           const loadFac = peakPow > 0 ? (avgPow / peakPow) : 0;
           
+          // Accumulate live consumption: Current (A) * time (h) = Charge (Ah)
+          // Assume ~3 second intervals = 3/3600 h
+          const chargeDelta = current * (3 / 3600); // Ah per reading
+          const newLiveConsumption = prev.liveConsumptionAh + chargeDelta;
+          
           return {
             currentReadings: newCurrentReadings,
             powerReadings: newPowerReadings,
@@ -58,7 +64,8 @@ export default function CurrentPage() {
             rmsCurrent: rms,
             avgPower: avgPow,
             peakPower: peakPow,
-            loadFactor: loadFac
+            loadFactor: loadFac,
+            liveConsumptionAh: newLiveConsumption
           };
         });
       }
@@ -202,7 +209,7 @@ export default function CurrentPage() {
           </div>
           <div>
             <h1 className="text-3xl font-medium text-white">{translate('current_monitoring')}</h1>
-            <p className="text-gray-400">{translate('total_consumption')}: {(summary?.totals?.current_ah ?? 0).toLocaleString()} A·h</p>
+            <p className="text-gray-400">{translate('total_consumption')}: {((summary?.totals?.current_ah ?? 0) + liveStats.liveConsumptionAh).toFixed(3)} A·h</p>
           </div>
         </div>
         
