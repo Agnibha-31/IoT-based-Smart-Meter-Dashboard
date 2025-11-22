@@ -17,16 +17,16 @@ router.post('/reset-users', async (req, res) => {
     }
     
     // Delete all users
-    const result = await db.run('DELETE FROM users');
+    await db.run('DELETE FROM users');
+    await db.persist(); // Ensure changes are saved
     
     res.json({ 
       success: true, 
-      message: 'All user accounts have been deleted',
-      deletedCount: result.changes || 0
+      message: 'All user accounts have been deleted. Application reset to first-time setup.'
     });
   } catch (error) {
     console.error('Reset users error:', error);
-    res.status(500).json({ error: 'Failed to reset users' });
+    res.status(500).json({ error: 'Failed to reset users', details: error.message });
   }
 });
 
