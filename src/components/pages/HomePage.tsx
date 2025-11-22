@@ -112,10 +112,9 @@ export default function HomePage() {
       setLiveChartData(prev => {
         // Avoid duplicate timestamps
         const filtered = prev.filter(p => Math.abs(p.timestamp - ts) > 1000);
-        // Keep all points from session start, limit to reasonable number for performance
+        // Keep ALL points from session start - no limit, accumulates until dashboard is closed
         const updated = [...filtered, chartPoint];
-        // Keep last 200 points max (or adjust based on needs)
-        return updated.length > 200 ? updated.slice(-200) : updated;
+        return updated;
       });
     });
     
