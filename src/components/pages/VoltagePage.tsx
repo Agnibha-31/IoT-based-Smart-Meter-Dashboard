@@ -30,17 +30,54 @@ export default function VoltagePage() {
   const [summary, setSummary] = useState<any>(null);
   const [historyPoints, setHistoryPoints] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Live statistics tracking (resets on page load/refresh)
+  const [liveStats, setLiveStats] = useState({
+    voltageReadings: [] as number[],
+    peakVoltage: 0,
+    avgVoltage: 0,
+    lowVoltage: 0
+  });
 
   useEffect(() => {
     let unsub = () => {};
+    
+    const updateVoltageStats = (voltage: number) => {
+      if (voltage > 0) {
+        setLiveStats(prev => {
+          const newReadings = [...prev.voltageReadings, voltage];
+          const peak = Math.max(...newReadings);
+          const low = Math.min(...newReadings);
+          const avg = newReadings.reduce((sum, v) => sum + v, 0) / newReadings.length;
+          
+          return {
+            voltageReadings: newReadings,
+            peakVoltage: peak,
+            avgVoltage: avg,
+            lowVoltage: low
+          };
+        });
+      }
+    };
+    
     fetchLatest()
       .then((r) => {
-        if (r?.reading) setLiveVoltage((r.reading as LiveReading).voltage ?? 0);
+        if (r?.reading) {
+          const voltage = (r.reading as LiveReading).voltage ?? 0;
+          setLiveVoltage(voltage);
+          updateVoltageStats(voltage);
+        }
       })
       .catch(() => {});
-    unsub = subscribeToLiveReadings((lr) => setLiveVoltage(lr.voltage ?? 0));
+      
+    unsub = subscribeToLiveReadings((lr) => {
+      const voltage = lr.voltage ?? 0;
+      setLiveVoltage(voltage);
+      updateVoltageStats(voltage);
+    });
+    
     return () => unsub();
-  }, []);
+  }, []); 
 
   useEffect(() => {
     const load = async () => {
@@ -64,40 +101,47 @@ export default function VoltagePage() {
     load();
   }, [selectedTimeframe]);
 
-  const stats = useMemo(() => ([
-    {
-      labelKey: 'current_voltage',
-      value: liveVoltage.toFixed(2),
-      unit: translate('volts'),
-      icon: Zap,
-      color: 'from-blue-500 to-cyan-500',
-      status: liveVoltage >= 210 && liveVoltage <= 240 ? 'good' : 'warning',
-    },
-    {
-      labelKey: 'peak_today',
-      value: (summary?.peaks?.voltage ?? 0).toFixed(1),
-      unit: translate('volts'),
-      icon: TrendingUp,
-      color: 'from-green-500 to-emerald-500',
-      status: 'good',
-    },
-    {
-      labelKey: 'average',
-      value: (summary?.averages?.voltage ?? 0).toFixed(1),
-      unit: translate('volts'),
-      icon: BarChart3,
-      color: 'from-purple-500 to-violet-500',
-      status: 'normal',
-    },
-    {
-      labelKey: 'low_warning',
-      value: (summary?.lows?.voltage ?? 0).toFixed(1),
-      unit: translate('volts'),
-      icon: AlertTriangle,
-      color: 'from-orange-500 to-red-500',
-      status: (summary?.lows?.voltage ?? 0) < 205 ? 'warning' : 'good',
-    },
-  ]), [summary, liveVoltage, translate]);
+  const stats = useMemo(() => {
+    // Combine live stats with historical summary (use whichever is more extreme)
+    const peakVoltage = Math.max(liveStats.peakVoltage, summary?.peaks?.voltage ?? 0);
+    const avgVoltage = liveStats.voltageReadings.length > 0 ? liveStats.avgVoltage : (summary?.averages?.voltage ?? 0);
+    const lowVoltage = liveStats.lowVoltage > 0 ? Math.min(liveStats.lowVoltage, summary?.lows?.voltage ?? 999) : (summary?.lows?.voltage ?? 0);
+    
+    return [
+      {
+        labelKey: 'current_voltage',
+        value: liveVoltage.toFixed(2),
+        unit: translate('volts'),
+        icon: Zap,
+        color: 'from-blue-500 to-cyan-500',
+        status: liveVoltage >= 210 && liveVoltage <= 240 ? 'good' : 'warning',
+      },
+      {
+        labelKey: 'peak_today',
+        value: peakVoltage.toFixed(1),
+        unit: translate('volts'),
+        icon: TrendingUp,
+        color: 'from-green-500 to-emerald-500',
+        status: 'good',
+      },
+      {
+        labelKey: 'average',
+        value: avgVoltage.toFixed(1),
+        unit: translate('volts'),
+        icon: BarChart3,
+        color: 'from-purple-500 to-violet-500',
+        status: 'normal',
+      },
+      {
+        labelKey: 'low_warning',
+        value: lowVoltage.toFixed(1),
+        unit: translate('volts'),
+        icon: AlertTriangle,
+        color: 'from-orange-500 to-red-500',
+        status: lowVoltage < 205 ? 'warning' : 'good',
+      },
+    ];
+  }, [summary, liveVoltage, liveStats, translate]);
 
   const chartData = useMemo(() => historyPoints.map((point) => ({
     date: new Date(point.timestamp * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }),

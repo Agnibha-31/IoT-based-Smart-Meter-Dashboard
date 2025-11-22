@@ -13,13 +13,70 @@ export default function CurrentPage() {
   const { summary } = useTelemetrySummary({ period: 'month' });
   const [historicalData, setHistoricalData] = useState<any[]>([]);
   const [selectedView, setSelectedView] = useState('trend');
+  
+  // Live statistics tracking (resets on page load/refresh)
+  const [liveStats, setLiveStats] = useState({
+    currentReadings: [] as number[],
+    powerReadings: [] as number[],
+    peakCurrent: 0,
+    rmsCurrent: 0,
+    avgPower: 0,
+    peakPower: 0,
+    loadFactor: 0
+  });
 
   useEffect(() => {
     let unsub = () => {};
+    
+    const updateCurrentStats = (reading: LiveReading) => {
+      const current = reading.current ?? 0;
+      const power = reading.real_power_kw ?? 0;
+      
+      if (current > 0) {
+        setLiveStats(prev => {
+          const newCurrentReadings = [...prev.currentReadings, current];
+          const newPowerReadings = [...prev.powerReadings, power];
+          
+          // Calculate peak current
+          const peak = Math.max(...newCurrentReadings);
+          
+          // Calculate RMS current
+          const sumSquares = newCurrentReadings.reduce((sum, i) => sum + (i * i), 0);
+          const rms = Math.sqrt(sumSquares / newCurrentReadings.length);
+          
+          // Calculate average and peak power
+          const avgPow = newPowerReadings.reduce((sum, p) => sum + p, 0) / newPowerReadings.length;
+          const peakPow = Math.max(...newPowerReadings);
+          
+          // Calculate load factor (average power / peak power)
+          const loadFac = peakPow > 0 ? (avgPow / peakPow) : 0;
+          
+          return {
+            currentReadings: newCurrentReadings,
+            powerReadings: newPowerReadings,
+            peakCurrent: peak,
+            rmsCurrent: rms,
+            avgPower: avgPow,
+            peakPower: peakPow,
+            loadFactor: loadFac
+          };
+        });
+      }
+    };
+    
     fetchLatest().then(r => {
-      if (r?.reading) setLiveCurrent((r.reading as LiveReading).current ?? 0);
+      if (r?.reading) {
+        const reading = r.reading as LiveReading;
+        setLiveCurrent(reading.current ?? 0);
+        updateCurrentStats(reading);
+      }
     }).catch(() => {});
-    unsub = subscribeToLiveReadings(lr => setLiveCurrent(lr.current ?? 0));
+    
+    unsub = subscribeToLiveReadings(lr => {
+      setLiveCurrent(lr.current ?? 0);
+      updateCurrentStats(lr);
+    });
+    
     return () => unsub();
   }, []);
 
@@ -39,6 +96,11 @@ export default function CurrentPage() {
     { key: 'realtime', labelKey: 'real_time', icon: Activity }
   ];
 
+  // Combine live stats with historical summary
+  const peakCurrent = Math.max(liveStats.peakCurrent, summary?.peaks?.current ?? 0);
+  const rmsCurrent = liveStats.currentReadings.length > 0 ? liveStats.rmsCurrent : (summary?.rmsCurrent ?? liveCurrent);
+  const loadFactor = liveStats.currentReadings.length > 0 ? liveStats.loadFactor : (summary?.loadFactor ?? 0);
+  
   const stats = [
     {
       labelKey: 'live_current',
@@ -50,7 +112,7 @@ export default function CurrentPage() {
     },
     {
       labelKey: 'rms_current',
-      value: (summary?.rmsCurrent ?? liveCurrent).toFixed(2),
+      value: rmsCurrent.toFixed(2),
       unit: translate('amperes'),
       icon: Gauge,
       color: 'from-blue-500 to-cyan-500',
@@ -58,7 +120,7 @@ export default function CurrentPage() {
     },
     {
       labelKey: 'peak_current',
-      value: (summary?.peaks?.current ?? 0).toFixed(1),
+      value: peakCurrent.toFixed(1),
       unit: translate('amperes'),
       icon: TrendingUp,
       color: 'from-purple-500 to-violet-500',
@@ -66,7 +128,7 @@ export default function CurrentPage() {
     },
     {
       labelKey: 'load_factor',
-      value: ((summary?.loadFactor ?? 0) * 100).toFixed(1),
+      value: (loadFactor * 100).toFixed(1),
       unit: translate('percent'),
       icon: BarChart3,
       color: 'from-orange-500 to-red-500',
