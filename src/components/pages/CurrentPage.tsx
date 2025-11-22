@@ -74,8 +74,15 @@ export default function CurrentPage() {
     fetchLatest().then(r => {
       if (r?.reading) {
         const reading = r.reading as LiveReading;
-        setLiveCurrent(reading.current ?? 0);
-        updateCurrentStats(reading);
+        const ts = (reading.captured_at ?? reading.created_at ?? Math.floor(Date.now() / 1000)) * 1000;
+        const ageMinutes = (Date.now() - ts) / 60000;
+        
+        // Only use if device is online (data within 5 minutes)
+        if (ageMinutes <= 5) {
+          setLiveCurrent(reading.current ?? 0);
+          updateCurrentStats(reading);
+        }
+        // Otherwise leave at 0 (device offline)
       }
     }).catch(() => {});
     

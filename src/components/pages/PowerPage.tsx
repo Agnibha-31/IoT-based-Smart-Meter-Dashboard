@@ -109,7 +109,16 @@ export default function PowerPage() {
     fetchLatest()
       .then((r) => {
         const lr = (r?.reading as LiveReading) || null;
-        updatePowerStats(lr);
+        if (lr) {
+          const ts = (lr.captured_at ?? lr.created_at ?? Math.floor(Date.now() / 1000)) * 1000;
+          const ageMinutes = (Date.now() - ts) / 60000;
+          
+          // Only use if device is online (data within 5 minutes)
+          if (ageMinutes <= 5) {
+            updatePowerStats(lr);
+          }
+          // Otherwise leave at 0 (device offline)
+        }
       })
       .catch(() => {});
       

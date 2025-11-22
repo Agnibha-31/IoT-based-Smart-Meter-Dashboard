@@ -20,15 +20,20 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
   const [nameFocused, setNameFocused] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(false); // Toggle between login and register
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [showPasswordHelp, setShowPasswordHelp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const debounceTimer = useRef<number | null>(null);
   const lastTried = useRef<{ email: string; password: string } | null>(null);
 
-  // Multi-user system: Always start in login mode
-  // Users can switch to register mode via "Register Now" link
+  // Check if this is first time setup
+  useEffect(() => {
+    fetch('http://localhost:5000/api/auth/check-first-user')
+      .then(res => res.json())
+      .then(data => setIsFirstTimeUser(data.isFirstUser))
+      .catch(() => setIsFirstTimeUser(false));
+  }, []);
 
   // Full name validation - at least 2 words, each starting with capital letter
   const validateName = (fullName: string) => {
@@ -75,7 +80,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
   const passwordValidation = validatePassword(password);
   const isPasswordValid = Object.values(passwordValidation).every(v => v);
   const passwordsMatch = password === confirmPassword;
-  const isFormValid = isRegisterMode 
+  const isFormValid = isFirstTimeUser 
     ? (nameValidation.isValid && emailValidation.isValid && isPasswordValid && passwordsMatch)
     : (emailValidation.isValid && password.length >= 6);
 
@@ -85,22 +90,22 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
       setShowError('Please provide email and password');
       return;
     }
-    if (isRegisterMode && !name) {
+    if (isFirstTimeUser && !name) {
       setShowError('Please provide your name');
       return;
     }
-    if (isRegisterMode && !isPasswordValid) {
+    if (isFirstTimeUser && !isPasswordValid) {
       setShowError('Password does not meet requirements');
       return;
     }
-    if (isRegisterMode && !passwordsMatch) {
+    if (isFirstTimeUser && !passwordsMatch) {
       setShowError('Passwords do not match');
       return;
     }
     setShowError(null);
     setIsSubmitting(true);
     try {
-      if (isRegisterMode) {
+      if (isFirstTimeUser) {
         await onRegister({ email, password, name });
       } else {
         await onLogin({ email, password });
@@ -115,7 +120,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
 
   // Auto-authenticate for existing users only (not for registration)
   useEffect(() => {
-    if (isRegisterMode) return; // Disable auto-login for registration mode
+    if (isFirstTimeUser) return; // Disable auto-login for first time setup
     
     if (debounceTimer.current) {
       window.clearTimeout(debounceTimer.current);
@@ -136,7 +141,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
         debounceTimer.current = null;
       }
     };
-  }, [email, password, isSubmitting, isRegisterMode]);
+  }, [email, password, isSubmitting, isFirstTimeUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 px-4">
@@ -187,11 +192,11 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
           <div className="space-y-6">
             <div className="text-center">
               <p className="text-white/90 text-sm mb-6">
-                {isRegisterMode ? 'Create your account' : translate('enter_credentials')}
+                {isFirstTimeUser ? translate('setup_account') : translate('enter_credentials')}
               </p>
             </div>
             
-            {isRegisterMode && (
+            {isFirstTimeUser && (
               <div className="relative">
                 <label className="block text-white/90 text-sm mb-2 text-center">Full Name</label>
                 <div className="relative w-4/5 mx-auto">
@@ -244,7 +249,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             )}
             
             <div className="relative">
-              <label className="block text-white/90 text-sm mb-2 text-center">{isRegisterMode ? 'Mail Id' : translate('username')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">{translate('username')}</label>
               <div className="relative w-4/5 mx-auto">
                 <motion.input
                   whileFocus={{ scale: 1.02 }}
@@ -253,13 +258,12 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setUsernameFocused(true)}
                   onBlur={() => setUsernameFocused(false)}
-                  style={{ paddingLeft: '3.5rem', paddingRight: '3rem' }}
-                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isRegisterMode && !nameValidation.isValid ? 'pointer-events-none' : ''}`}
-                  placeholder={usernameFocused || email ? '' : (isRegisterMode ? 'Enter your email address' : translate('enter_username'))}
+                  className={`w-full py-2.5 px-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !nameValidation.isValid ? 'pointer-events-none' : ''}`}
+                  placeholder={usernameFocused || email ? '' : translate('enter_username')}
                   autoComplete="email"
-                  disabled={isRegisterMode ? !nameValidation.isValid : false}
+                  disabled={isFirstTimeUser ? !nameValidation.isValid : false}
                 />
-                {isRegisterMode && email && (
+                {isFirstTimeUser && email && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -282,7 +286,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   </motion.div>
                 )}
               </div>
-              {isRegisterMode && email && !emailValidation.isValid && (
+              {isFirstTimeUser && email && !emailValidation.isValid && (
                 <motion.p
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -296,7 +300,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             </div>
             
             <div className="relative">
-              <label className="block text-white/90 text-sm mb-2 text-center">{isRegisterMode ? 'Create Password' : translate('password')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">{translate('password')}</label>
               <div className="relative w-4/5 mx-auto flex items-center">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -304,27 +308,26 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => {
                     setPasswordFocused(true);
-                    if (isRegisterMode) setShowPasswordHelp(true);
+                    if (isFirstTimeUser) setShowPasswordHelp(true);
                   }}
                   onBlur={() => {
                     setPasswordFocused(false);
                     setTimeout(() => setShowPasswordHelp(false), 200);
                   }}
-                  style={{ paddingLeft: '2.0rem', paddingRight: isRegisterMode ? '3.5rem' : '3.0rem' }}
-                  className={`w-full py-2.5 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isRegisterMode && !emailValidation.isValid ? 'pointer-events-none' : ''}`}
+                  className={`w-full py-2.5 px-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 placeholder:text-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center ${isFirstTimeUser && !emailValidation.isValid ? 'pointer-events-none' : ''}`}
                   placeholder={passwordFocused || password ? '' : '••••••••'}
-                  autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
-                  disabled={isRegisterMode ? !emailValidation.isValid : false}
+                  autoComplete={isFirstTimeUser ? 'new-password' : 'current-password'}
+                  disabled={isFirstTimeUser ? !emailValidation.isValid : false}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 text-white/60 hover:text-white transition-colors duration-200"
-                  style={{ right: isRegisterMode && password ? '2.5rem' : '0.75rem' }}
+                  style={{ right: isFirstTimeUser && password ? '2.5rem' : '0.75rem' }}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
-                {isRegisterMode && password && (
+                {isFirstTimeUser && password && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -349,7 +352,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               </div>
               
               {/* Password Requirements Tooltip */}
-              {isRegisterMode && showPasswordHelp && password && (
+              {isFirstTimeUser && showPasswordHelp && password && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -449,75 +452,21 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
               </div>
             )}
 
-            <motion.button
-              whileHover={{ scale: isFormValid ? 1.05 : 1 }}
-              whileTap={{ scale: isFormValid ? 0.95 : 1 }}
-              type="submit"
-              disabled={isSubmitting || !isFormValid}
-              className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
-                isFormValid && !isSubmitting
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
-                  : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
-              }`}
-            >
-              {isSubmitting 
-                ? (isRegisterMode ? 'Creating Account...' : 'Logging in...') 
-                : (isRegisterMode ? 'Create Account' : 'Sign In')
-              }
-            </motion.button>
-
-            {/* Register/Login Toggle Link */}
-            {!isRegisterMode && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-center pt-2"
+            {/* Sign In button removed - auto-login handles authentication */}
+            {isFirstTimeUser && (
+              <motion.button
+                whileHover={{ scale: isFormValid ? 1.05 : 1 }}
+                whileTap={{ scale: isFormValid ? 0.95 : 1 }}
+                type="submit"
+                disabled={isSubmitting || !isFormValid}
+                className={`w-4/5 mx-auto block py-3 rounded-lg font-medium shadow-lg transition-all duration-300 ${
+                  isFormValid && !isSubmitting
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-xl cursor-pointer'
+                    : 'bg-gray-500 text-gray-300 cursor-not-allowed opacity-50'
+                }`}
               >
-                <p className="text-white/70 text-sm">
-                  Not a user?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsRegisterMode(true);
-                      setShowError(null);
-                      setPassword('');
-                      setConfirmPassword('');
-                      setName('');
-                    }}
-                    className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition-colors duration-200 cursor-pointer"
-                  >
-                    Register Now
-                  </button>
-                </p>
-              </motion.div>
-            )}
-
-            {/* Back to Login Link */}
-            {isRegisterMode && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-center pt-2"
-              >
-                <p className="text-white/70 text-sm">
-                  Already have an account?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsRegisterMode(false);
-                      setShowError(null);
-                      setPassword('');
-                      setConfirmPassword('');
-                      setName('');
-                    }}
-                    className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition-colors duration-200 cursor-pointer"
-                  >
-                    Sign In
-                  </button>
-                </p>
-              </motion.div>
+                {isSubmitting ? translate('creating_account') : translate('create_account')}
+              </motion.button>
             )}
 
             {showError && (

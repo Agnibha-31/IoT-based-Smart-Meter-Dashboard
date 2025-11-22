@@ -35,31 +35,38 @@ export default function HomePage() {
   useEffect(() => {
     let unsub = () => {};
     
-    // Prime latest once on mount
+    // Prime latest once on mount - but only if data is recent (within 5 minutes)
     fetchLatest().then(r => {
       if (r?.reading) {
         const lr: LiveReading = r.reading;
         const ts = (lr.captured_at ?? lr.created_at ?? Math.floor(Date.now() / 1000)) * 1000;
-        const newData = {
-          voltage: lr.voltage ?? 0,
-          current: lr.current ?? 0,
-          power: lr.real_power_kw ?? 0,
-          energy: lr.energy_kwh ?? 0,
-          frequency: lr.frequency ?? 0,
-          timestamp: new Date(ts).toLocaleTimeString()
-        };
-        setLiveData(newData);
+        const nowTs = Date.now();
+        const ageMinutes = (nowTs - ts) / 60000;
         
-        // Add to live chart data - start accumulating from first point
-        const chartPoint = {
-          time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          timestamp: ts,
-          voltage: parseFloat((newData.voltage).toFixed(2)),
-          current: parseFloat((newData.current).toFixed(3)),
-          power: parseFloat((newData.power).toFixed(3)),
-          energy: parseFloat((newData.energy).toFixed(4))
-        };
-        setLiveChartData([chartPoint]);
+        // Only use reading if it's less than 5 minutes old (device is actively sending data)
+        if (ageMinutes <= 5) {
+          const newData = {
+            voltage: lr.voltage ?? 0,
+            current: lr.current ?? 0,
+            power: lr.real_power_kw ?? 0,
+            energy: lr.energy_kwh ?? 0,
+            frequency: lr.frequency ?? 0,
+            timestamp: new Date(ts).toLocaleTimeString()
+          };
+          setLiveData(newData);
+          
+          // Add to live chart data - start accumulating from first point
+          const chartPoint = {
+            time: new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            timestamp: ts,
+            voltage: parseFloat((newData.voltage).toFixed(2)),
+            current: parseFloat((newData.current).toFixed(3)),
+            power: parseFloat((newData.power).toFixed(3)),
+            energy: parseFloat((newData.energy).toFixed(4))
+          };
+          setLiveChartData([chartPoint]);
+        }
+        // If data is too old, leave initial state at 0.0 (device offline)
       }
     }).catch(() => {});
     

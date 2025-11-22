@@ -102,7 +102,14 @@ export default function EnergyPage() {
     fetchLatest().then(r => {
       const reading = (r as any)?.reading as LiveReading | undefined;
       if (reading) {
-        updateEnergyStats(reading);
+        const ts = (reading.captured_at ?? reading.created_at ?? Math.floor(Date.now() / 1000)) * 1000;
+        const ageMinutes = (Date.now() - ts) / 60000;
+        
+        // Only use if device is online (data within 5 minutes)
+        if (ageMinutes <= 5) {
+          updateEnergyStats(reading);
+        }
+        // Otherwise leave at 0 (device offline)
       }
     }).catch(() => {});
     

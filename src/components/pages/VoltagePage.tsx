@@ -70,9 +70,17 @@ export default function VoltagePage() {
     fetchLatest()
       .then((r) => {
         if (r?.reading) {
-          const voltage = (r.reading as LiveReading).voltage ?? 0;
-          setLiveVoltage(voltage);
-          updateVoltageStats(voltage);
+          const lr = r.reading as LiveReading;
+          const ts = (lr.captured_at ?? lr.created_at ?? Math.floor(Date.now() / 1000)) * 1000;
+          const ageMinutes = (Date.now() - ts) / 60000;
+          
+          // Only use if device sent data within last 5 minutes (device is online)
+          if (ageMinutes <= 5) {
+            const voltage = lr.voltage ?? 0;
+            setLiveVoltage(voltage);
+            updateVoltageStats(voltage);
+          }
+          // Otherwise leave at 0 (device offline)
         }
       })
       .catch(() => {});
