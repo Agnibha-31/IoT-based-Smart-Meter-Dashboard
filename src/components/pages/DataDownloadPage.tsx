@@ -566,7 +566,7 @@ export default function DataDownloadPage() {
                         onChange={(e) => setCompressionEnabled(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className={`w-11 h-6 ${!compressionSupported ? 'bg-gray-500' : 'bg-gray-600'} peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${compressionSupported ? 'peer-checked:bg-purple-500' : ''}`}></div>
+                      <div className={`w-11 h-6 ${!compressionSupported ? 'bg-gray-500' : 'bg-gray-600'} peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${compressionSupported ? 'peer-checked:bg-purple-500' : ''}`}></div>
                     </label>
                   </div>
                 </div>
@@ -580,7 +580,7 @@ export default function DataDownloadPage() {
                       onChange={(e) => setIncludeMetadata(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                   </label>
                 </div>
               </div>
@@ -659,10 +659,10 @@ export default function DataDownloadPage() {
               <div className="flex justify-between">
                 <span className="text-gray-400">Date Range:</span>
                 <span className="text-white text-xs">
-                  {selectedDateFrom && selectedDateTo 
-                    ? `${Math.ceil((new Date(selectedDateTo).getTime() - new Date(selectedDateFrom).getTime()) / (1000 * 60 * 60 * 24))} days`
-                    : 'Not set'
-                  }
+                  {selectedDateFrom && selectedDateTo ? (() => {
+                    const days = Math.ceil((new Date(selectedDateTo).getTime() - new Date(selectedDateFrom).getTime()) / (1000 * 60 * 60 * 24));
+                    return days === 0 ? '1 day' : `${days} day${days > 1 ? 's' : ''}`;
+                  })() : 'Not set'}
                 </span>
               </div>
               
@@ -680,7 +680,9 @@ export default function DataDownloadPage() {
               <div className="flex justify-between">
                 <span className="text-gray-400">Data Points:</span>
                 <span className="text-white text-sm">
-                  {selectedDateFrom && selectedDateTo ? (() => {
+                  {previewData && previewData.length > 0 ? (
+                    <span className="text-green-400">{previewData.length.toLocaleString()} <span className="text-gray-500 text-xs">(actual)</span></span>
+                  ) : selectedDateFrom && selectedDateTo ? (() => {
                     const startDate = new Date(selectedDateFrom);
                     const endDate = new Date(selectedDateTo);
                     const timeDiff = endDate.getTime() - startDate.getTime();
@@ -695,7 +697,7 @@ export default function DataDownloadPage() {
                       case '1day': pointCount = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); break;
                       default: pointCount = Math.floor(hours * 3600);
                     }
-                    return Math.max(1, pointCount).toLocaleString();
+                    return <span>{Math.max(1, pointCount).toLocaleString()} <span className="text-gray-500 text-xs">(estimated)</span></span>;
                   })() : '0'}
                 </span>
               </div>
