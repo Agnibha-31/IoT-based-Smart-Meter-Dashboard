@@ -41,6 +41,7 @@ export default function DeviceConfigPage() {
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [showESP32Code, setShowESP32Code] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [renderKey, setRenderKey] = useState(0);
 
   useEffect(() => {
     fetchDevices();
@@ -114,19 +115,21 @@ export default function DeviceConfigPage() {
       }
       
       const data = await response.json();
-      console.log('Regenerated device data:', data.device);
+      console.log('OLD API Key:', selectedDevice?.api_key);
+      console.log('NEW API Key:', data.device.api_key);
+      console.log('Keys are different:', selectedDevice?.api_key !== data.device.api_key);
       
       // Force state updates with new object references
       const updatedDevice = { ...data.device };
       
       setDevices(prev => {
         const newDevices = prev.map(d => d.id === deviceId ? updatedDevice : d);
-        console.log('Updated devices:', newDevices);
+        console.log('Updated devices array');
         return newDevices;
       });
       
       if (selectedDevice?.id === deviceId) {
-        console.log('Updating selected device with new API key:', updatedDevice.api_key);
+        console.log('Updating selected device...');
         setSelectedDevice(updatedDevice);
         // Clear and refresh ESP32 config
         setEsp32Config(null);
@@ -136,6 +139,9 @@ export default function DeviceConfigPage() {
       
       // Automatically show the new API key so user can see it changed
       setShowApiKey(prev => ({ ...prev, [deviceId]: true }));
+      
+      // Force component re-render
+      setRenderKey(prev => prev + 1);
       
       toast.success(`API key regenerated! New key: ${updatedDevice.api_key.substring(0, 8)}...`);
     } catch (error) {
@@ -277,7 +283,7 @@ export default function DeviceConfigPage() {
         {/* Configuration Details */}
         <div className="lg:col-span-2">
           {selectedDevice ? (
-            <div className="space-y-6">
+            <div key={`${selectedDevice.id}-${renderKey}-${selectedDevice.api_key}`} className="space-y-6">
               {/* Device Details */}
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-xl font-semibold text-white mb-4">Device Details</h2>
