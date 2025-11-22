@@ -4,7 +4,6 @@ import { LineChart, Line, Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip,
 import { Zap, Activity, Power, Battery, TrendingUp, TrendingDown, Monitor, Radio } from 'lucide-react';
 import { useSettings } from '../SettingsContext';
 import { subscribeToLiveReadings, fetchLatest, type LiveReading } from '../../utils/liveApi';
-import { useTelemetrySummary, useTelemetryHistory } from '../../hooks/useTelemetry';
 
 export default function HomePage() {
   const { translate } = useSettings();
@@ -17,10 +16,9 @@ export default function HomePage() {
     timestamp: new Date().toLocaleTimeString()
   });
   const [liveChartData, setLiveChartData] = useState<any[]>([]);
-  const summaryResult = useTelemetrySummary({ period: 'day' });
   const [selectedMetric, setSelectedMetric] = useState('voltage');
   
-  // Live statistics tracking for all metrics (session-based)
+  // Live-only statistics tracking (session-based, resets on reload)
   const [liveHomeStats, setLiveHomeStats] = useState({
     voltageReadings: [] as number[],
     currentReadings: [] as number[],
@@ -133,22 +131,16 @@ export default function HomePage() {
     return `${sign}${delta.toFixed(1)}%`;
   };
 
-  // Intelligently blend live session stats with historical data for display
+  // Pure live data display - no historical integration
   const displayVoltage = liveData.voltage;
   const displayCurrent = liveData.current;
   const displayPower = liveData.power;
   const displayEnergy = liveData.energy;
   
-  // Use live averages for comparison when available, otherwise use historical
-  const baselineVoltage = liveHomeStats.voltageReadings.length > 5 
-    ? liveHomeStats.avgVoltage 
-    : summaryResult.summary?.averages?.voltage;
-  const baselineCurrent = liveHomeStats.currentReadings.length > 5
-    ? liveHomeStats.avgCurrent
-    : summaryResult.summary?.averages?.current;
-  const baselinePower = liveHomeStats.powerReadings.length > 5
-    ? liveHomeStats.avgPower
-    : summaryResult.summary?.averages?.power_kw;
+  // Use only live session averages for comparison
+  const baselineVoltage = liveHomeStats.voltageReadings.length > 5 ? liveHomeStats.avgVoltage : null;
+  const baselineCurrent = liveHomeStats.currentReadings.length > 5 ? liveHomeStats.avgCurrent : null;
+  const baselinePower = liveHomeStats.powerReadings.length > 5 ? liveHomeStats.avgPower : null;
   
   const metrics = [
     {
@@ -185,7 +177,7 @@ export default function HomePage() {
       unit: translate('watt_hours'),
       icon: Battery,
       color: 'from-orange-500 to-red-500',
-      change: formatChange(displayEnergy, summaryResult.summary?.totals?.energy_kwh)
+      change: liveHomeStats.energyReadings.length > 0 ? `+${liveHomeStats.energyReadings.length}` : 'Live'
     }
   ];
 
@@ -215,7 +207,7 @@ export default function HomePage() {
             <h1 className="text-3xl font-medium text-white mb-2">{translate('smart_meter_dashboard')}</h1>
             <p className="text-gray-400">{translate('real_time_monitoring')}</p>
             <p className="text-gray-500 text-sm">
-              24h Energy: {((summaryResult.summary?.totals?.energy_kwh ?? 0) * 1000).toFixed(0)} Wh
+              Session Energy: {(liveData.energy * 1000).toFixed(0)} Wh
             </p>
           </div>
         </div>
