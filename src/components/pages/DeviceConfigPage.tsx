@@ -109,7 +109,6 @@ export default function DeviceConfigPage() {
         }
       );
       const data = await response.json();
-      toast.success('API key regenerated successfully!');
       
       // Update local state
       setDevices(prev => prev.map(d => d.id === deviceId ? data.device : d));
@@ -117,6 +116,11 @@ export default function DeviceConfigPage() {
         setSelectedDevice(data.device);
         await fetchESP32Config(deviceId);
       }
+      
+      // Automatically show the new API key so user can see it changed
+      setShowApiKey(prev => ({ ...prev, [deviceId]: true }));
+      
+      toast.success('API key regenerated successfully! New key is now visible.');
     } catch (error) {
       toast.error('Failed to regenerate API key');
     } finally {
