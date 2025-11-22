@@ -593,21 +593,7 @@ export default function SettingsPage({ onLogout }: SettingsPageProps) {
           </div>
         </div>
         
-        {/* Live Info Display */}
         <div className="flex items-center space-x-4">
-          <motion.div
-            animate={{ opacity: [1, 0.7, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-right"
-          >
-            <div className="text-white font-medium">
-              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </div>
-            <div className="text-gray-400 text-sm">
-              {getLocationName()} • {weatherData.temperature}°C
-            </div>
-          </motion.div>
-          
           {unsavedChanges && (
             <motion.button
               initial={{ scale: 0 }}
