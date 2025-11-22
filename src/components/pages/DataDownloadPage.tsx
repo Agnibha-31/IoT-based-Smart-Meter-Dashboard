@@ -729,63 +729,67 @@ export default function DataDownloadPage() {
               <h3 className="text-white text-lg font-medium">Export Summary</h3>
             </div>
             
-            <div className="space-y-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Format:</span>
-                <span className="text-white">{formats.find(f => f.key === selectedFormat)?.label}</span>
+            {dbStats && dbStats.total_readings === 0 ? (
+              <div className="flex items-center space-x-2 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                <div>
+                  <p className="text-yellow-400 font-medium text-sm">No Data Available</p>
+                  <p className="text-gray-400 text-xs mt-1">The database is currently empty. Please add data to enable exports.</p>
+                </div>
               </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-400">Metrics:</span>
-                <span className="text-white">{selectedMetrics.length} selected</span>
+            ) : (
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Format:</span>
+                  <span className="text-white">{formats.find(f => f.key === selectedFormat)?.label}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Metrics:</span>
+                  <span className="text-white">{selectedMetrics.length} selected</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Date Range:</span>
+                  <span className="text-white text-xs">
+                    {selectedDateFrom && selectedDateTo ? (() => {
+                      const days = Math.ceil((new Date(selectedDateTo).getTime() - new Date(selectedDateFrom).getTime()) / (1000 * 60 * 60 * 24));
+                      return days === 0 ? '1 day' : `${days} day${days > 1 ? 's' : ''}`;
+                    })() : 'Not set'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Est. Size:</span>
+                  <span className="text-white text-sm">
+                    {dbStats && dbStats.total_readings > 0 ? (
+                      <>
+                        {calculateFileSize()} MB
+                        {compressionEnabled && compressionSupported && <span className="text-green-400 ml-1">(compressed)</span>}
+                        {!compressionEnabled && parseFloat(calculateFileSize()) > 10 && (
+                          <span className="text-yellow-400 ml-1">(large file)</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-gray-500">0 MB</span>
+                    )}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Data Points:</span>
+                  <span className="text-white text-sm">
+                    {previewData && previewData.length > 0 ? (
+                      <span className="text-green-400">{previewData.length.toLocaleString()} <span className="text-gray-500 text-xs">(actual)</span></span>
+                    ) : dbStats && dbStats.total_readings > 0 ? (
+                      <span className="text-gray-400">{dbStats.total_readings.toLocaleString()} <span className="text-gray-500 text-xs">(in DB)</span></span>
+                    ) : (
+                      <span className="text-gray-500">0</span>
+                    )}
+                  </span>
+                </div>
               </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-400">Date Range:</span>
-                <span className="text-white text-xs">
-                  {selectedDateFrom && selectedDateTo ? (() => {
-                    const days = Math.ceil((new Date(selectedDateTo).getTime() - new Date(selectedDateFrom).getTime()) / (1000 * 60 * 60 * 24));
-                    return days === 0 ? '1 day' : `${days} day${days > 1 ? 's' : ''}`;
-                  })() : 'Not set'}
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-400">Est. Size:</span>
-                <span className="text-white text-sm">
-                  {calculateFileSize()} MB
-                  {compressionEnabled && compressionSupported && <span className="text-green-400 ml-1">(compressed)</span>}
-                  {!compressionEnabled && parseFloat(calculateFileSize()) > 10 && (
-                    <span className="text-yellow-400 ml-1">(large file)</span>
-                  )}
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-400">Data Points:</span>
-                <span className="text-white text-sm">
-                  {previewData && previewData.length > 0 ? (
-                    <span className="text-green-400">{previewData.length.toLocaleString()} <span className="text-gray-500 text-xs">(actual)</span></span>
-                  ) : selectedDateFrom && selectedDateTo ? (() => {
-                    const startDate = new Date(selectedDateFrom);
-                    const endDate = new Date(selectedDateTo);
-                    const timeDiff = endDate.getTime() - startDate.getTime();
-                    const hours = timeDiff / (1000 * 60 * 60);
-                    
-                    let pointCount;
-                    switch (samplingRate) {
-                      case '1min': pointCount = Math.floor(hours * 60); break;
-                      case '5min': pointCount = Math.floor(hours * 12); break;
-                      case '15min': pointCount = Math.floor(hours * 4); break;
-                      case '1hour': pointCount = Math.floor(hours); break;
-                      case '1day': pointCount = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); break;
-                      default: pointCount = Math.floor(hours * 3600);
-                    }
-                    return <span>{Math.max(1, pointCount).toLocaleString()} <span className="text-gray-500 text-xs">(estimated)</span></span>;
-                  })() : '0'}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Action Buttons */}
