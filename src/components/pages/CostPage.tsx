@@ -616,7 +616,6 @@ export default function CostPage({ liveData }: CostPageProps) {
         </motion.div>
       </div>
       {loading && <div className="text-center text-sm text-gray-400">Loading cost data...</div>}
-      {error && <div className="text-center text-sm text-red-400">{error}</div>}
     </motion.div>
   );
 }

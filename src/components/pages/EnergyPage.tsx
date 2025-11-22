@@ -513,9 +513,6 @@ export default function EnergyPage() {
       {loading && (
         <div className="text-center text-sm text-gray-400">Loading energy data...</div>
       )}
-      {error && (
-        <div className="text-center text-sm text-red-400">{error}</div>
-      )}
     </motion.div>
   );
 }
