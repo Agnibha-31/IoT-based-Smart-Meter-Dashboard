@@ -18,7 +18,23 @@ router.get(
     const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
     const device = await getDeviceByIdAndUser(deviceId, req.user.id);
     if (!device) {
-      return res.status(403).json({ error: 'Access denied to this device' });
+      // Return empty summary instead of error
+      return res.json({
+        device_id: deviceId,
+        from: 0,
+        to: 0,
+        intervalSeconds: 3600,
+        summary: {
+          avgPower: 0,
+          maxPower: 0,
+          totalEnergy: 0,
+          peakDemand: 0,
+          avgVoltage: 0,
+          avgCurrent: 0,
+          avgPowerFactor: 0,
+          count: 0
+        }
+      });
     }
     
     const { from, to, durationSeconds } = resolveRange({
@@ -53,7 +69,13 @@ router.get(
     const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
     const device = await getDeviceByIdAndUser(deviceId, req.user.id);
     if (!device) {
-      return res.status(403).json({ error: 'Access denied to this device' });
+      // Return empty voltage history instead of error
+      return res.json({
+        device_id: deviceId,
+        from: 0,
+        to: 0,
+        points: []
+      });
     }
     
     const { from, to, durationSeconds } = resolveRange({
@@ -90,7 +112,19 @@ router.get(
     const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
     const device = await getDeviceByIdAndUser(deviceId, req.user.id);
     if (!device) {
-      return res.status(403).json({ error: 'Access denied to this device' });
+      // Return empty cost projection instead of error
+      return res.json({
+        device_id: deviceId,
+        from: 0,
+        to: 0,
+        projection: {
+          totalCost: 0,
+          avgDailyCost: 0,
+          projectedMonthlyCost: 0,
+          baseRate: req.user?.base_tariff ?? config.baseTariff,
+          currencySymbol: req.query.symbol || '₹'
+        }
+      });
     }
     
     const { from, to } = resolveRange({

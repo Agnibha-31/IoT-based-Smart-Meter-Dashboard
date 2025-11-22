@@ -40,6 +40,7 @@ export default function DeviceConfigPage() {
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({});
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [showESP32Code, setShowESP32Code] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     fetchDevices();
@@ -56,8 +57,11 @@ export default function DeviceConfigPage() {
       if (data.devices.length > 0) {
         setSelectedDevice(data.devices[0]);
       }
+      // Brief delay for smooth transition
+      setTimeout(() => setIsInitialLoad(false), 50);
     } catch (error) {
       toast.error('Failed to load devices');
+      setIsInitialLoad(false);
     }
   };
 
@@ -149,6 +153,17 @@ export default function DeviceConfigPage() {
         </div>
       </div>
 
+      {isInitialLoad ? (
+        <div className="min-h-[200px] flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
+          >
+            {/* Invisible placeholder to prevent layout shift */}
+          </motion.div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Device List */}
           <div className="lg:col-span-1">
@@ -400,6 +415,7 @@ export default function DeviceConfigPage() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
