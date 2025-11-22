@@ -38,7 +38,6 @@ export default function DeviceConfigPage() {
   const [esp32Config, setEsp32Config] = useState<ESP32Config | null>(null);
   const [esp32Code, setEsp32Code] = useState<string>('');
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({});
-  const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [showESP32Code, setShowESP32Code] = useState(false);
 
@@ -48,7 +47,6 @@ export default function DeviceConfigPage() {
 
   const fetchDevices = async () => {
     try {
-      setLoading(true);
       const token = localStorage.getItem('smartmeter_token');
       const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}/api/devices`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -60,13 +58,10 @@ export default function DeviceConfigPage() {
       }
     } catch (error) {
       toast.error('Failed to load devices');
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchESP32Config = async (deviceId: string) => {
-    setLoading(true);
     try {
       const token = localStorage.getItem('smartmeter_token');
       const response = await fetch(
@@ -79,8 +74,6 @@ export default function DeviceConfigPage() {
       setShowESP32Code(true);
     } catch (error) {
       toast.error('Failed to load ESP32 configuration');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -156,15 +149,7 @@ export default function DeviceConfigPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-12 border border-gray-700/50 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <RefreshCw className="w-12 h-12 text-blue-400 animate-spin" />
-            <p className="text-gray-300">Loading devices...</p>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Device List */}
           <div className="lg:col-span-1">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
@@ -414,8 +399,7 @@ export default function DeviceConfigPage() {
             </div>
           )}
         </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

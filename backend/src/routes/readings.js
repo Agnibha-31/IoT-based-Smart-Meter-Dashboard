@@ -139,7 +139,26 @@ router.get(
     const { getDeviceByIdAndUser } = await import('../services/deviceService.js');
     const device = await getDeviceByIdAndUser(deviceId, req.user.id);
     if (!device) {
-      return res.status(403).json({ error: 'Access denied to this device' });
+      // Return empty stats instead of error
+      return res.json({
+        device_id: deviceId,
+        total_readings: 0,
+        earliest_timestamp: null,
+        latest_timestamp: null,
+        earliest_date: null,
+        latest_date: null,
+        time_span_days: 0,
+        database_size_mb: '0.00',
+        metrics_availability: {
+          voltage: 0,
+          current: 0,
+          power: 0,
+          energy: 0,
+          power_factor: 0,
+          frequency: 0,
+        },
+        last_updated: new Date().toISOString()
+      });
     }
     
     const { db } = await import('../db.js');

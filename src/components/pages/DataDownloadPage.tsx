@@ -425,66 +425,141 @@ export default function DataDownloadPage() {
       </div>
 
       {/* Database Status */}
-      {dbStats && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <HardDrive className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-white text-lg font-medium">Database Status</h3>
-            </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <HardDrive className="w-6 h-6 text-cyan-400" />
+            <h3 className="text-white text-xl font-semibold">Live Database Status</h3>
+          </div>
+          <motion.div
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex items-center space-x-2"
+          >
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <span className="text-green-400 text-sm font-medium">Real-time</span>
+          </motion.div>
+        </div>
+        
+        {isLoadingStats ? (
+          <div className="flex items-center justify-center py-8">
             <motion.div
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="flex items-center space-x-2"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             >
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-green-400 text-xs">Live</span>
+              <Database className="w-8 h-8 text-cyan-400" />
             </motion.div>
+            <span className="ml-3 text-gray-400">Loading database statistics...</span>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">Total Records</p>
-              <p className="text-white text-lg font-bold">{dbStats.total_readings?.toLocaleString() || 0}</p>
+        ) : dbStats ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+              <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-blue-300 text-xs font-medium mb-2">Total Records</p>
+                <p className="text-white text-2xl font-bold">{dbStats.total_readings?.toLocaleString() || 0}</p>
+                <p className="text-blue-400 text-xs mt-1">Data points stored</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/30 rounded-lg p-4">
+                <p className="text-purple-300 text-xs font-medium mb-2">Time Span</p>
+                <p className="text-white text-2xl font-bold">{dbStats.time_span_days || 0}</p>
+                <p className="text-purple-400 text-xs mt-1">Days of data</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-cyan-600/20 to-cyan-800/20 border border-cyan-500/30 rounded-lg p-4">
+                <p className="text-cyan-300 text-xs font-medium mb-2">Database Size</p>
+                <p className="text-white text-2xl font-bold">{dbStats.database_size_mb || 0}</p>
+                <p className="text-cyan-400 text-xs mt-1">MB on disk</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-600/20 to-green-800/20 border border-green-500/30 rounded-lg p-4">
+                <p className="text-green-300 text-xs font-medium mb-2">Earliest Record</p>
+                <p className="text-white text-sm font-semibold">
+                  {dbStats.earliest_date ? new Date(dbStats.earliest_date).toLocaleDateString() : 'N/A'}
+                </p>
+                <p className="text-green-400 text-xs mt-1">
+                  {dbStats.earliest_date ? new Date(dbStats.earliest_date).toLocaleTimeString() : ''}
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-orange-600/20 to-orange-800/20 border border-orange-500/30 rounded-lg p-4">
+                <p className="text-orange-300 text-xs font-medium mb-2">Latest Record</p>
+                <p className="text-white text-sm font-semibold">
+                  {dbStats.latest_date ? new Date(dbStats.latest_date).toLocaleDateString() : 'N/A'}
+                </p>
+                <p className="text-orange-400 text-xs mt-1">
+                  {dbStats.latest_date ? new Date(dbStats.latest_date).toLocaleTimeString() : ''}
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-pink-600/20 to-pink-800/20 border border-pink-500/30 rounded-lg p-4">
+                <p className="text-pink-300 text-xs font-medium mb-2">Last Updated</p>
+                <p className="text-white text-sm font-semibold">
+                  {dbStats.last_updated ? new Date(dbStats.last_updated).toLocaleDateString() : 'N/A'}
+                </p>
+                <p className="text-pink-400 text-xs mt-1">
+                  {dbStats.last_updated ? new Date(dbStats.last_updated).toLocaleTimeString() : ''}
+                </p>
+              </div>
             </div>
-            
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">Time Span</p>
-              <p className="text-white text-lg font-bold">{dbStats.time_span_days || 0} days</p>
+
+            {/* Metrics Availability */}
+            {dbStats.metrics_availability && (
+              <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                <p className="text-gray-300 text-sm font-medium mb-3">Data Metrics Availability</p>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  <div className="text-center">
+                    <p className="text-blue-400 text-lg font-bold">{dbStats.metrics_availability.voltage?.toLocaleString() || 0}</p>
+                    <p className="text-gray-400 text-xs">Voltage</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-green-400 text-lg font-bold">{dbStats.metrics_availability.current?.toLocaleString() || 0}</p>
+                    <p className="text-gray-400 text-xs">Current</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-purple-400 text-lg font-bold">{dbStats.metrics_availability.power?.toLocaleString() || 0}</p>
+                    <p className="text-gray-400 text-xs">Power</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-yellow-400 text-lg font-bold">{dbStats.metrics_availability.energy?.toLocaleString() || 0}</p>
+                    <p className="text-gray-400 text-xs">Energy</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-orange-400 text-lg font-bold">{dbStats.metrics_availability.power_factor?.toLocaleString() || 0}</p>
+                    <p className="text-gray-400 text-xs">PF</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-cyan-400 text-lg font-bold">{dbStats.metrics_availability.frequency?.toLocaleString() || 0}</p>
+                    <p className="text-gray-400 text-xs">Frequency</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Storage Info */}
+            <div className="mt-4 bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-300 text-sm">Statistics refresh every 30 seconds automatically</span>
+                </div>
+                <span className="text-blue-400 text-xs font-mono">
+                  Updated: {dbStats.last_updated ? new Date(dbStats.last_updated).toLocaleString() : 'N/A'}
+                </span>
+              </div>
             </div>
-            
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">DB Size</p>
-              <p className="text-white text-lg font-bold">{dbStats.database_size_mb || 0} MB</p>
-            </div>
-            
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">Earliest Data</p>
-              <p className="text-white text-xs font-medium">
-                {dbStats.earliest_date ? new Date(dbStats.earliest_date).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-            
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">Latest Data</p>
-              <p className="text-white text-xs font-medium">
-                {dbStats.latest_date ? new Date(dbStats.latest_date).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-            
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">Last Updated</p>
-              <p className="text-cyan-400 text-xs font-medium">
-                {dbStats.last_updated ? new Date(dbStats.last_updated).toLocaleTimeString() : 'N/A'}
-              </p>
-            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <Database className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400">No database statistics available</p>
           </div>
-        </motion.div>
-      )}
+        )}
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Download Configuration */}
