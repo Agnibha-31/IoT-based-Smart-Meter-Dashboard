@@ -10,7 +10,7 @@ export default function CurrentPage() {
   const { translate } = useSettings();
   const [liveCurrent, setLiveCurrent] = useState(0);
   const history = useTelemetryHistory({ period: 'month', interval_seconds: 24 * 3600 });
-  const summary = useTelemetrySummary({ period: 'month' });
+  const { summary } = useTelemetrySummary({ period: 'month' });
   const [historicalData, setHistoricalData] = useState<any[]>([]);
   const [selectedView, setSelectedView] = useState('trend');
 
@@ -140,7 +140,7 @@ export default function CurrentPage() {
           </div>
           <div>
             <h1 className="text-3xl font-medium text-white">{translate('current_monitoring')}</h1>
-            <p className="text-gray-400">{translate('total_consumption')}: {(summary.summary?.totals?.current_ah ?? 0).toLocaleString()} A·h</p>
+            <p className="text-gray-400">{translate('total_consumption')}: {(summary?.totals?.current_ah ?? 0).toLocaleString()} A·h</p>
           </div>
         </div>
         
