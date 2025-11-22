@@ -40,6 +40,7 @@ export default function DeviceConfigPage() {
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const [showESP32Code, setShowESP32Code] = useState(false);
 
   useEffect(() => {
     fetchDevices();
@@ -72,10 +73,23 @@ export default function DeviceConfigPage() {
       const data = await response.json();
       setEsp32Config(data.config);
       setEsp32Code(data.esp32Code);
+      setShowESP32Code(true);
     } catch (error) {
       toast.error('Failed to load ESP32 configuration');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleESP32Code = () => {
+    if (showESP32Code) {
+      setShowESP32Code(false);
+    } else {
+      if (selectedDevice && !esp32Config) {
+        fetchESP32Config(selectedDevice.id);
+      } else {
+        setShowESP32Code(true);
+      }
     }
   };
 
@@ -207,38 +221,40 @@ export default function DeviceConfigPage() {
                   </div>
                   <div>
                     <label className="text-sm text-gray-400">Device ID</label>
-                    <div className="flex items-center gap-2">
-                      <code className="text-white font-mono text-sm">{selectedDevice.id}</code>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-white font-mono text-sm break-all">{selectedDevice.id}</code>
                       <button
                         onClick={() => copyToClipboard(selectedDevice.id, 'Device ID')}
-                        className="p-1 hover:bg-gray-700 rounded"
+                        className="p-1.5 hover:bg-gray-700 rounded flex-shrink-0"
                       >
                         <Copy className="w-4 h-4 text-gray-400" />
                       </button>
                     </div>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="text-sm text-gray-400">API Key</label>
-                    <div className="flex items-center gap-2">
-                      <code className="text-white font-mono text-sm">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-white font-mono text-sm break-all flex-1 min-w-0">
                         {showApiKey[selectedDevice.id] ? selectedDevice.api_key : '••••••••••••••••••••••••••••••••••••'}
                       </code>
-                      <button
-                        onClick={() => toggleApiKeyVisibility(selectedDevice.id)}
-                        className="p-1 hover:bg-gray-700 rounded"
-                      >
-                        {showApiKey[selectedDevice.id] ? (
-                          <EyeOff className="w-4 h-4 text-gray-400" />
-                        ) : (
-                          <Eye className="w-4 h-4 text-gray-400" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(selectedDevice.api_key, 'API Key')}
-                        className="p-1 hover:bg-gray-700 rounded"
-                      >
-                        <Copy className="w-4 h-4 text-gray-400" />
-                      </button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => toggleApiKeyVisibility(selectedDevice.id)}
+                          className="p-1.5 hover:bg-gray-700 rounded"
+                        >
+                          {showApiKey[selectedDevice.id] ? (
+                            <EyeOff className="w-4 h-4 text-gray-400" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(selectedDevice.api_key, 'API Key')}
+                          className="p-1.5 hover:bg-gray-700 rounded"
+                        >
+                          <Copy className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -251,7 +267,7 @@ export default function DeviceConfigPage() {
                   </div>
                 </div>
                 
-                <div className="mt-4 flex gap-3">
+                <div className="mt-4 flex flex-wrap gap-3">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -266,17 +282,17 @@ export default function DeviceConfigPage() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => fetchESP32Config(selectedDevice.id)}
+                    onClick={toggleESP32Code}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                   >
                     <Code className="w-4 h-4" />
-                    Get ESP32 Code
+                    {showESP32Code ? 'Hide ESP32 Code' : 'Get ESP32 Code'}
                   </motion.button>
                 </div>
               </div>
 
               {/* ESP32 Configuration */}
-              {esp32Config && (
+              {esp32Config && showESP32Code && (
                 <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
                   <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                     <Wifi className="w-5 h-5 text-green-400" />

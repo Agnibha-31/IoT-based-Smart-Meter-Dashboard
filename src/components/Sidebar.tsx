@@ -12,8 +12,7 @@ import {
   Settings, 
   DollarSign, 
   LogOut,
-  User,
-  Smartphone
+  User
 } from 'lucide-react';
 import { useSettings } from './SettingsContext';
 import { toast } from 'sonner';
@@ -27,7 +26,6 @@ const menuItems = [
   { id: 'analytics', labelKey: 'analytics', icon: BarChart3 },
   { id: 'data-download', labelKey: 'data_download', icon: Download },
   { id: 'cost', labelKey: 'cost_calculation', icon: DollarSign },
-  { id: 'device-config', labelKey: 'Device Config', icon: Smartphone },
   { id: 'settings', labelKey: 'settings', icon: Settings },
 ];
 
@@ -148,12 +146,15 @@ export default function Sidebar({ currentPage, onPageChange, collapsed, onToggle
 
       {/* User Profile & Logout */}
       <div className="p-2 border-t border-slate-700 space-y-1.5">
-        {/* User Profile - Always show with username beside icon */}
-        <motion.div
+        {/* User Profile - Clickable to access Device Config */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onPageChange('device-config')}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} p-3 bg-slate-700 rounded-lg`}
+          className={`w-full flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} p-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors cursor-pointer`}
         >
           <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
             <User className="w-5 h-5 text-white" />
@@ -171,7 +172,7 @@ export default function Sidebar({ currentPage, onPageChange, collapsed, onToggle
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </motion.button>
 
         {/* Show user icon when collapsed */}
         {collapsed && (
