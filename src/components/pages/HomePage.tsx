@@ -149,7 +149,8 @@ export default function HomePage() {
       unit: translate('volts'),
       icon: Zap,
       color: 'from-blue-500 to-cyan-500',
-      change: formatChange(displayVoltage, baselineVoltage)
+      dotColor: 'bg-blue-400',
+      shadowColor: 'shadow-blue-400/50'
     },
     {
       key: 'current',
@@ -158,7 +159,8 @@ export default function HomePage() {
       unit: translate('amperes'),
       icon: Activity,
       color: 'from-green-500 to-emerald-500',
-      change: formatChange(displayCurrent, baselineCurrent)
+      dotColor: 'bg-green-400',
+      shadowColor: 'shadow-green-400/50'
     },
     {
       key: 'power',
@@ -167,7 +169,8 @@ export default function HomePage() {
       unit: translate('watts'),
       icon: Power,
       color: 'from-purple-500 to-violet-500',
-      change: formatChange(displayPower, baselinePower)
+      dotColor: 'bg-purple-400',
+      shadowColor: 'shadow-purple-400/50'
     },
     {
       key: 'energy',
@@ -176,7 +179,8 @@ export default function HomePage() {
       unit: translate('watt_hours'),
       icon: Battery,
       color: 'from-orange-500 to-red-500',
-      change: liveHomeStats.energyReadings.length > 0 ? `+${liveHomeStats.energyReadings.length}` : 'Live'
+      dotColor: 'bg-orange-400',
+      shadowColor: 'shadow-orange-400/50'
     }
   ];
 
@@ -205,9 +209,6 @@ export default function HomePage() {
           <div>
             <h1 className="text-3xl font-medium text-white mb-2">{translate('smart_meter_dashboard')}</h1>
             <p className="text-gray-400">{translate('real_time_monitoring')}</p>
-            <p className="text-gray-500 text-sm">
-              Session Energy: {(liveData.energy * 1000).toFixed(0)} Wh
-            </p>
           </div>
         </div>
         
@@ -247,7 +248,6 @@ export default function HomePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
-          const isPositive = metric.change.startsWith('+');
           
           return (
             <motion.div
@@ -262,10 +262,21 @@ export default function HomePage() {
                 <div className={`w-12 h-12 bg-gradient-to-r ${metric.color} rounded-lg flex items-center justify-center`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <div className={`flex items-center space-x-1 text-sm ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                  {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                  <span>{metric.change}</span>
-                </div>
+                <motion.div
+                  animate={{ 
+                    opacity: [1, 0.4, 1],
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="relative"
+                >
+                  <div className={`w-3 h-3 ${metric.dotColor} rounded-full ${metric.shadowColor} shadow-lg`} />
+                  <div className={`absolute inset-0 w-3 h-3 ${metric.dotColor} rounded-full blur-sm opacity-75`} />
+                </motion.div>
               </div>
               
               <div>
