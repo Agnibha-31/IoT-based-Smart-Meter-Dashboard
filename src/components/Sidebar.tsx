@@ -12,7 +12,8 @@ import {
   Settings, 
   DollarSign, 
   LogOut,
-  User
+  User,
+  Smartphone
 } from 'lucide-react';
 import { useSettings } from './SettingsContext';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ const menuItems = [
   { id: 'analytics', labelKey: 'analytics', icon: BarChart3 },
   { id: 'data-download', labelKey: 'data_download', icon: Download },
   { id: 'cost', labelKey: 'cost_calculation', icon: DollarSign },
+  { id: 'device-config', labelKey: 'Device Config', icon: Smartphone },
   { id: 'settings', labelKey: 'settings', icon: Settings },
 ];
 

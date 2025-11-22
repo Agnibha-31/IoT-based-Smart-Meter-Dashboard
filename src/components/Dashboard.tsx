@@ -12,6 +12,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import DataDownloadPage from './pages/DataDownloadPage';
 import SettingsPage from './pages/SettingsPage';
 import CostPage from './pages/CostPage';
+import DeviceConfigPage from './pages/DeviceConfigPage';
 import { initializeNotificationService, getNotificationService } from '../utils/notificationService';
 
 interface DashboardProps {
@@ -106,6 +107,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       case 'data-download': return <DataDownloadPage />;
       case 'settings': return <SettingsPage onLogout={onLogout} />;
       case 'cost': return <CostPage liveData={liveData} />;
+      case 'device-config': return <DeviceConfigPage />;
       default: return <HomePage />;
     }
   };

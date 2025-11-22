@@ -83,3 +83,13 @@ export const getUserDevices = async (userId) => {
   return db.all('SELECT * FROM devices WHERE user_id = ? ORDER BY created_at DESC', [userId]);
 };
 
+export const regenerateDeviceApiKey = async (deviceId) => {
+  const newApiKey = randomUUID();
+  const timestamp = nowSeconds();
+  await db.run(
+    'UPDATE devices SET api_key = ?, updated_at = ? WHERE id = ?',
+    [newApiKey, timestamp, deviceId],
+  );
+  return db.get('SELECT * FROM devices WHERE id = ?', [deviceId]);
+};
+
