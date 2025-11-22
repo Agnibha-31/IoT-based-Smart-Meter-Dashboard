@@ -50,7 +50,7 @@ export default function CurrentPage() {
     },
     {
       labelKey: 'rms_current',
-      value: (summary.summary?.rmsCurrent ?? liveCurrent).toFixed(2),
+      value: (summary?.rmsCurrent ?? liveCurrent).toFixed(2),
       unit: translate('amperes'),
       icon: Gauge,
       color: 'from-blue-500 to-cyan-500',
@@ -58,7 +58,7 @@ export default function CurrentPage() {
     },
     {
       labelKey: 'peak_current',
-      value: (summary.summary?.peaks?.current ?? 0).toFixed(1),
+      value: (summary?.peaks?.current ?? 0).toFixed(1),
       unit: translate('amperes'),
       icon: TrendingUp,
       color: 'from-purple-500 to-violet-500',
@@ -66,7 +66,7 @@ export default function CurrentPage() {
     },
     {
       labelKey: 'load_factor',
-      value: ((summary.summary?.loadFactor ?? 0) * 100).toFixed(1),
+      value: ((summary?.loadFactor ?? 0) * 100).toFixed(1),
       unit: translate('percent'),
       icon: BarChart3,
       color: 'from-orange-500 to-red-500',
