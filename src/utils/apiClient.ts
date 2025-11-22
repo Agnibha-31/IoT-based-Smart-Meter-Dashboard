@@ -141,3 +141,8 @@ export const deleteHistoryBefore = (before: number, deviceId?: string) =>
     },
   });
 
+export const getDatabaseStats = (deviceId?: string) =>
+  request('/api/readings/stats', {
+    query: deviceId ? { device_id: deviceId } : {},
+  });
+

@@ -105,5 +105,71 @@ router.delete(
   }),
 );
 
+router.get(
+  '/stats',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const deviceId = req.query.device_id || config.deviceDefaultId;
+    const { db } = await import('../db.js');
+    
+    // Get total count
+    const countResult = await db.get(
+      'SELECT COUNT(*) as total FROM readings WHERE device_id = ?',
+      [deviceId]
+    );
+    
+    // Get date range
+    const rangeResult = await db.get(
+      `SELECT 
+        MIN(captured_at) as earliest_timestamp,
+        MAX(captured_at) as latest_timestamp
+       FROM readings WHERE device_id = ?`,
+      [deviceId]
+    );
+    
+    // Get size estimate (SQLite page count * page size)
+    const sizeResult = await db.get('PRAGMA page_count');
+    const pageSizeResult = await db.get('PRAGMA page_size');
+    const dbSizeBytes = (sizeResult.page_count || 0) * (pageSizeResult.page_size || 4096);
+    
+    // Calculate metrics availability
+    const metricsResult = await db.get(
+      `SELECT 
+        COUNT(CASE WHEN voltage IS NOT NULL THEN 1 END) as has_voltage,
+        COUNT(CASE WHEN current IS NOT NULL THEN 1 END) as has_current,
+        COUNT(CASE WHEN real_power_kw IS NOT NULL THEN 1 END) as has_power,
+        COUNT(CASE WHEN energy_kwh IS NOT NULL THEN 1 END) as has_energy,
+        COUNT(CASE WHEN power_factor IS NOT NULL THEN 1 END) as has_power_factor,
+        COUNT(CASE WHEN frequency IS NOT NULL THEN 1 END) as has_frequency
+       FROM readings WHERE device_id = ?`,
+      [deviceId]
+    );
+    
+    const total = countResult?.total || 0;
+    const earliest = rangeResult?.earliest_timestamp || null;
+    const latest = rangeResult?.latest_timestamp || null;
+    
+    res.json({
+      device_id: deviceId,
+      total_readings: total,
+      earliest_timestamp: earliest,
+      latest_timestamp: latest,
+      earliest_date: earliest ? new Date(earliest * 1000).toISOString() : null,
+      latest_date: latest ? new Date(latest * 1000).toISOString() : null,
+      time_span_days: earliest && latest ? ((latest - earliest) / 86400).toFixed(2) : 0,
+      database_size_mb: (dbSizeBytes / (1024 * 1024)).toFixed(2),
+      metrics_availability: {
+        voltage: metricsResult?.has_voltage || 0,
+        current: metricsResult?.has_current || 0,
+        power: metricsResult?.has_power || 0,
+        energy: metricsResult?.has_energy || 0,
+        power_factor: metricsResult?.has_power_factor || 0,
+        frequency: metricsResult?.has_frequency || 0,
+      },
+      last_updated: new Date().toISOString()
+    });
+  }),
+);
+
 export default router;
 

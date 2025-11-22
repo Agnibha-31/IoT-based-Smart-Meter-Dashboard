@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Calendar, FileText, Database, CheckCircle, Filter, AlertCircle, Trash2, Eye, Save, X } from 'lucide-react';
+import { Download, Calendar, FileText, Database, CheckCircle, Filter, AlertCircle, Trash2, Eye, Save, X, HardDrive } from 'lucide-react';
 import { useSettings } from '../SettingsContext';
 import { toast } from 'sonner';
-import { getDownloadPreview, downloadReadings } from '../../utils/apiClient';
+import { getDownloadPreview, downloadReadings, getDatabaseStats } from '../../utils/apiClient';
 
 export default function DataDownloadPage() {
   const { translate, getCurrentTime, getLocationName } = useSettings();
@@ -25,6 +25,8 @@ export default function DataDownloadPage() {
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [dbStats, setDbStats] = useState<any>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   // Update current time
   useEffect(() => {
@@ -33,6 +35,26 @@ export default function DataDownloadPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [getCurrentTime]);
+
+  // Fetch database stats on mount and periodically
+  useEffect(() => {
+    const fetchStats = async () => {
+      setIsLoadingStats(true);
+      try {
+        const stats = await getDatabaseStats();
+        setDbStats(stats);
+      } catch (error) {
+        console.error('Failed to fetch database stats:', error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats(); // Initial fetch
+    const statsTimer = setInterval(fetchStats, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(statsTimer);
+  }, []);
 
   // Save download history to localStorage
   useEffect(() => {
@@ -414,6 +436,68 @@ export default function DataDownloadPage() {
           )}
         </div>
       </div>
+
+      {/* Database Status */}
+      {dbStats && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <HardDrive className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-white text-lg font-medium">Database Status</h3>
+            </div>
+            <motion.div
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="flex items-center space-x-2"
+            >
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span className="text-green-400 text-xs">Live</span>
+            </motion.div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">Total Records</p>
+              <p className="text-white text-lg font-bold">{dbStats.total_readings?.toLocaleString() || 0}</p>
+            </div>
+            
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">Time Span</p>
+              <p className="text-white text-lg font-bold">{dbStats.time_span_days || 0} days</p>
+            </div>
+            
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">DB Size</p>
+              <p className="text-white text-lg font-bold">{dbStats.database_size_mb || 0} MB</p>
+            </div>
+            
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">Earliest Data</p>
+              <p className="text-white text-xs font-medium">
+                {dbStats.earliest_date ? new Date(dbStats.earliest_date).toLocaleDateString() : 'N/A'}
+              </p>
+            </div>
+            
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">Latest Data</p>
+              <p className="text-white text-xs font-medium">
+                {dbStats.latest_date ? new Date(dbStats.latest_date).toLocaleDateString() : 'N/A'}
+              </p>
+            </div>
+            
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">Last Updated</p>
+              <p className="text-cyan-400 text-xs font-medium">
+                {dbStats.last_updated ? new Date(dbStats.last_updated).toLocaleTimeString() : 'N/A'}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Download Configuration */}
