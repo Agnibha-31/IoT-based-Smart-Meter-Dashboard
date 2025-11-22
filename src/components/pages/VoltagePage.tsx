@@ -150,12 +150,27 @@ export default function VoltagePage() {
     ];
   }, [summary, liveVoltage, liveStats, translate]);
 
-  const chartData = useMemo(() => historyPoints.map((point) => ({
-    date: new Date(point.timestamp * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }),
-    voltage: point.voltage ?? null,
-    peak: point.peak ?? null,
-    minimum: point.minimum ?? null,
-  })), [historyPoints]);
+  const chartData = useMemo(() => {
+    const historical = historyPoints.map((point) => ({
+      date: new Date(point.timestamp * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+      voltage: point.voltage ?? null,
+      peak: point.peak ?? null,
+      minimum: point.minimum ?? null,
+    }));
+    
+    // Add live data point for seamless real-time integration
+    if (liveVoltage > 0) {
+      const livePoint = {
+        date: 'Now',
+        voltage: liveVoltage,
+        peak: liveStats.peakVoltage > 0 ? liveStats.peakVoltage : liveVoltage,
+        minimum: liveStats.lowVoltage > 0 ? liveStats.lowVoltage : liveVoltage,
+      };
+      return [...historical, livePoint];
+    }
+    
+    return historical;
+  }, [historyPoints, liveVoltage, liveStats]);
 
   return (
     <motion.div

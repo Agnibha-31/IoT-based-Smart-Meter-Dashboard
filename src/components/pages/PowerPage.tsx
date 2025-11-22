@@ -140,13 +140,34 @@ export default function PowerPage() {
   }, [selectedRange]);
 
   const powerDistribution = useMemo(() => {
-    if (summary?.powerDistribution) {
+    // Intelligently blend live readings with historical distribution
+    if (summary?.powerDistribution && livePowerStats.powerReadings.length > 10) {
+      // If we have enough live data, blend with historical
+      const liveTotal = Math.max(
+        Math.abs(livePower.active) + Math.abs(livePower.reactive) + Math.abs(livePower.apparent),
+        0.0001
+      );
+      const liveDist = {
+        active: Math.abs((livePower.active / liveTotal) * 100),
+        reactive: Math.abs((livePower.reactive / liveTotal) * 100),
+        apparent: Math.abs((livePower.apparent / liveTotal) * 100)
+      };
+      
+      // Weighted average: 70% historical, 30% live for smooth transition
+      return [
+        { name: translate('active_power'), value: (summary.powerDistribution.real * 0.7 + liveDist.active * 0.3), color: '#8b5cf6' },
+        { name: translate('reactive_power'), value: (summary.powerDistribution.reactive * 0.7 + liveDist.reactive * 0.3), color: '#06b6d4' },
+        { name: translate('apparent_power'), value: (summary.powerDistribution.apparent * 0.7 + liveDist.apparent * 0.3), color: '#10b981' },
+      ];
+    } else if (summary?.powerDistribution) {
+      // Use historical when not enough live data
       return [
         { name: translate('active_power'), value: summary.powerDistribution.real ?? 0, color: '#8b5cf6' },
         { name: translate('reactive_power'), value: summary.powerDistribution.reactive ?? 0, color: '#06b6d4' },
         { name: translate('apparent_power'), value: summary.powerDistribution.apparent ?? 0, color: '#10b981' },
       ];
     }
+    // Fallback to pure live data if no historical
     const total = Math.max(
       Math.abs(livePower.active) + Math.abs(livePower.reactive) + Math.abs(livePower.apparent),
       0.0001,
@@ -156,7 +177,7 @@ export default function PowerPage() {
       { name: translate('reactive_power'), value: Math.abs((livePower.reactive / total) * 100), color: '#06b6d4' },
       { name: translate('apparent_power'), value: Math.abs((livePower.apparent / total) * 100), color: '#10b981' },
     ];
-  }, [summary, translate, livePower]);
+  }, [summary, translate, livePower, livePowerStats]);
 
   const stats = useMemo(() => {
     // Intelligently combine live session stats with historical data
@@ -204,21 +225,38 @@ export default function PowerPage() {
     ];
   }, [summary, livePower, livePowerStats, translate]);
 
-  const historyData = useMemo(() => historyPoints.map((point) => {
-    const label = new Date(point.timestamp * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit' });
-    const apparent = point.voltage != null && point.current != null ? (point.voltage * point.current) : null;
-    const active = point.realPowerKw ? point.realPowerKw * 1000 : null;
-    const reactive = apparent != null && active != null ? Math.sqrt(Math.max(apparent ** 2 - active ** 2, 0)) : null;
-    const pf = point.powerFactor ?? (apparent && active ? active / apparent : null);
-    return {
-      date: label,
-      timestamp: point.timestamp,
-      activePower: active ?? 0,
-      reactivePower: reactive ?? 0,
-      apparentPower: apparent ?? 0,
-      powerFactor: pf ?? 0,
-    };
-  }), [historyPoints]);
+  const historyData = useMemo(() => {
+    const historical = historyPoints.map((point) => {
+      const label = new Date(point.timestamp * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit' });
+      const apparent = point.voltage != null && point.current != null ? (point.voltage * point.current) : null;
+      const active = point.realPowerKw ? point.realPowerKw * 1000 : null;
+      const reactive = apparent != null && active != null ? Math.sqrt(Math.max(apparent ** 2 - active ** 2, 0)) : null;
+      const pf = point.powerFactor ?? (apparent && active ? active / apparent : null);
+      return {
+        date: label,
+        timestamp: point.timestamp,
+        activePower: active ?? 0,
+        reactivePower: reactive ?? 0,
+        apparentPower: apparent ?? 0,
+        powerFactor: pf ?? 0,
+      };
+    });
+    
+    // Add current live data point to chart for seamless integration
+    if (livePower.active > 0) {
+      const livePoint = {
+        date: 'Now',
+        timestamp: Math.floor(Date.now() / 1000),
+        activePower: livePower.active,
+        reactivePower: livePower.reactive,
+        apparentPower: livePower.apparent,
+        powerFactor: livePower.factor,
+      };
+      return [...historical, livePoint];
+    }
+    
+    return historical;
+  }, [historyPoints, livePower]);
 
   return (
     <motion.div
@@ -417,7 +455,6 @@ export default function PowerPage() {
               className="flex items-center space-x-2 text-purple-400"
             >
               <TrendingUp className="w-5 h-5" />
-              <span className="text-sm">Live Analytics</span>
             </motion.div>
           </div>
 

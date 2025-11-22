@@ -167,7 +167,20 @@ export default function EnergyPage() {
         setSummary(s);
         const points = (historyResp as any)?.points || [];
         const buckets = buildEnergyBuckets(points, s?.renewableShare ?? 0);
-        setEnergyData(buckets);
+        
+        // Add live energy data point for real-time chart integration
+        if (liveEnergy > 0) {
+          const livePoint: EnergyPoint = {
+            date: 'Now',
+            energy: liveEnergy,
+            renewable: liveEnergyStats.totalTracked > 0 
+              ? liveEnergyStats.renewableEnergy 
+              : liveEnergy * ((s?.renewableShare ?? 0) / 100)
+          };
+          setEnergyData([...buckets, livePoint]);
+        } else {
+          setEnergyData(buckets);
+        }
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load energy data');
       } finally {
@@ -176,7 +189,7 @@ export default function EnergyPage() {
     };
     run();
     return () => { cancelled = true; };
-  }, [selectedPeriod, buildEnergyBuckets]);
+  }, [selectedPeriod, buildEnergyBuckets, liveEnergy, liveEnergyStats]);
 
   const periods = [
     { key: 'weekly', label: 'Weekly', icon: Calendar },

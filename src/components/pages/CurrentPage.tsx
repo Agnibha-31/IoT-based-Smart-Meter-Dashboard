@@ -94,8 +94,19 @@ export default function CurrentPage() {
       current: p.current ?? 0,
       rms: p.current ? Math.sqrt((p.current * p.current)) : 0,
     }));
-    setHistoricalData(mapped);
-  }, [history.history]);
+    
+    // Add live data point for real-time integration
+    if (liveCurrent > 0 && liveStats.rmsCurrent > 0) {
+      const livePoint = {
+        date: 'Now',
+        current: liveCurrent,
+        rms: liveStats.rmsCurrent,
+      };
+      setHistoricalData([...mapped, livePoint]);
+    } else {
+      setHistoricalData(mapped);
+    }
+  }, [history.history, liveCurrent, liveStats.rmsCurrent]);
 
   const views = [
     { key: 'trend', labelKey: 'trend_analysis', icon: TrendingUp },
