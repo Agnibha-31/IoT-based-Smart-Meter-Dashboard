@@ -140,42 +140,43 @@ export default function PowerPage() {
   }, [selectedRange]);
 
   const powerDistribution = useMemo(() => {
-    // Intelligently blend live readings with historical distribution
+    // Always calculate live distribution for current values
+    const liveTotal = Math.max(
+      Math.abs(livePower.active) + Math.abs(livePower.reactive) + Math.abs(livePower.apparent),
+      0.0001
+    );
+    const liveDist = {
+      active: Math.abs((livePower.active / liveTotal) * 100),
+      reactive: Math.abs((livePower.reactive / liveTotal) * 100),
+      apparent: Math.abs((livePower.apparent / liveTotal) * 100)
+    };
+    
+    // Blend with historical if available and we have sufficient live data
     if (summary?.powerDistribution && livePowerStats.powerReadings.length > 10) {
-      // If we have enough live data, blend with historical
-      const liveTotal = Math.max(
-        Math.abs(livePower.active) + Math.abs(livePower.reactive) + Math.abs(livePower.apparent),
-        0.0001
-      );
-      const liveDist = {
-        active: Math.abs((livePower.active / liveTotal) * 100),
-        reactive: Math.abs((livePower.reactive / liveTotal) * 100),
-        apparent: Math.abs((livePower.apparent / liveTotal) * 100)
-      };
-      
       // Weighted average: 70% historical, 30% live for smooth transition
+      const activeVal = summary.powerDistribution.real * 0.7 + liveDist.active * 0.3;
+      const reactiveVal = summary.powerDistribution.reactive * 0.7 + liveDist.reactive * 0.3;
+      const apparentVal = summary.powerDistribution.apparent * 0.7 + liveDist.apparent * 0.3;
+      
       return [
-        { name: translate('active_power'), value: (summary.powerDistribution.real * 0.7 + liveDist.active * 0.3), color: '#8b5cf6' },
-        { name: translate('reactive_power'), value: (summary.powerDistribution.reactive * 0.7 + liveDist.reactive * 0.3), color: '#06b6d4' },
-        { name: translate('apparent_power'), value: (summary.powerDistribution.apparent * 0.7 + liveDist.apparent * 0.3), color: '#10b981' },
+        { name: translate('active_power'), value: Math.max(0.1, activeVal), color: '#8b5cf6' },
+        { name: translate('reactive_power'), value: Math.max(0.1, reactiveVal), color: '#06b6d4' },
+        { name: translate('apparent_power'), value: Math.max(0.1, apparentVal), color: '#10b981' },
       ];
-    } else if (summary?.powerDistribution) {
-      // Use historical when not enough live data
+    } else if (summary?.powerDistribution && livePower.active === 0) {
+      // Use historical when no live data available
       return [
-        { name: translate('active_power'), value: summary.powerDistribution.real ?? 0, color: '#8b5cf6' },
-        { name: translate('reactive_power'), value: summary.powerDistribution.reactive ?? 0, color: '#06b6d4' },
-        { name: translate('apparent_power'), value: summary.powerDistribution.apparent ?? 0, color: '#10b981' },
+        { name: translate('active_power'), value: Math.max(0.1, summary.powerDistribution.real ?? 0), color: '#8b5cf6' },
+        { name: translate('reactive_power'), value: Math.max(0.1, summary.powerDistribution.reactive ?? 0), color: '#06b6d4' },
+        { name: translate('apparent_power'), value: Math.max(0.1, summary.powerDistribution.apparent ?? 0), color: '#10b981' },
       ];
     }
-    // Fallback to pure live data if no historical
-    const total = Math.max(
-      Math.abs(livePower.active) + Math.abs(livePower.reactive) + Math.abs(livePower.apparent),
-      0.0001,
-    );
+    
+    // Use pure live data (most common case with ESP32 actively sending)
     return [
-      { name: translate('active_power'), value: Math.abs((livePower.active / total) * 100), color: '#8b5cf6' },
-      { name: translate('reactive_power'), value: Math.abs((livePower.reactive / total) * 100), color: '#06b6d4' },
-      { name: translate('apparent_power'), value: Math.abs((livePower.apparent / total) * 100), color: '#10b981' },
+      { name: translate('active_power'), value: Math.max(0.1, liveDist.active), color: '#8b5cf6' },
+      { name: translate('reactive_power'), value: Math.max(0.1, liveDist.reactive), color: '#06b6d4' },
+      { name: translate('apparent_power'), value: Math.max(0.1, liveDist.apparent), color: '#10b981' },
     ];
   }, [summary, translate, livePower, livePowerStats]);
 

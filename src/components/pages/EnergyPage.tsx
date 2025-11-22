@@ -248,11 +248,17 @@ export default function EnergyPage() {
     }
   ];
 
-  const efficiencyScore = summary?.efficiencyScore ?? 0;
+  // Calculate efficiency score with live integration
+  const historicalEfficiency = summary?.efficiencyScore ?? 0;
+  const liveEfficiencyBonus = liveEnergyStats.totalTracked > 0
+    ? Math.min(5, (liveEnergyStats.renewableEnergy / liveEnergyStats.totalTracked) * 10) // Up to 5% bonus for renewable
+    : 0;
+  const currentEfficiency = Math.min(100, historicalEfficiency + liveEfficiencyBonus);
+  
   const energyEfficiency = {
-    current: efficiencyScore,
-    target: Math.min(100, efficiencyScore + 10),
-    improvement:  Math.max(0, Math.min(100, efficiencyScore + 10) - efficiencyScore)
+    current: currentEfficiency,
+    target: Math.min(100, currentEfficiency + 10),
+    improvement: Math.max(0, Math.min(100, currentEfficiency + 10) - currentEfficiency)
   };
 
   return (
@@ -269,7 +275,7 @@ export default function EnergyPage() {
           </div>
           <div>
             <h1 className="text-3xl font-medium text-white">Energy Management</h1>
-            <p className="text-gray-400">Period energy: {totalEnergy.toLocaleString(undefined,{maximumFractionDigits:2})} kWh</p>
+            <p className="text-gray-400">Period energy: {(totalEnergy * 1000).toLocaleString(undefined,{maximumFractionDigits:0})} Wh</p>
           </div>
         </div>
         
