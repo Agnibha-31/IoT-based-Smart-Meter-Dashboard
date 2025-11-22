@@ -185,7 +185,8 @@ export default function CostPage({ liveData }: CostPageProps) {
     { key: 'yearly', label: 'Yearly' }
   ];
 
-  const totalCostINR = projection?.daily ?? 0;
+  // Use live costs for breakdown calculation, fallback to projection
+  const totalCostINR = liveCosts.daily > 0 ? liveCosts.daily : (projection?.daily ?? 0);
   const costBreakdown = [
     { name: 'Energy Cost', value: totalCostINR * 0.72, color: '#3b82f6' },
     { name: 'Transmission', value: totalCostINR * 0.12, color: '#10b981' },
@@ -540,32 +541,44 @@ export default function CostPage({ liveData }: CostPageProps) {
           <h3 className="text-white text-lg font-medium mb-6">{translate('cost_breakdown')}</h3>
           
           <div className="space-y-4">
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={costBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    dataKey="value"
-                  >
-                    {costBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            {totalCostINR > 0 ? (
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={costBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      dataKey="value"
+                      label={(entry) => `${((entry.value / totalCostINR) * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {costBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value: any) => `₹${Number(value).toFixed(2)}`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-48 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">No cost data available</p>
+                  <p className="text-gray-500 text-xs mt-1">Waiting for live power consumption data...</p>
+                </div>
+              </div>
+            )}
             
             <div className="space-y-2">
               {costBreakdown.map((item, index) => (
@@ -583,7 +596,9 @@ export default function CostPage({ liveData }: CostPageProps) {
                     />
                     <span className="text-gray-300 text-sm">{item.name}</span>
                   </div>
-                  <span className="text-white text-sm font-medium">{convertCurrency(item.value)}</span>
+                  <span className="text-white text-sm font-medium">
+                    {getCurrencySymbol()}{convertCurrency(item.value)}
+                  </span>
                 </motion.div>
               ))}
             </div>
