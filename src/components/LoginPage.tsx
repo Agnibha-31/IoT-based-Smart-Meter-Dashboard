@@ -29,9 +29,24 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
 
   // Check if this is first time setup
   useEffect(() => {
-    fetch('http://localhost:5000/api/auth/check-first-user')
+    // First check localStorage - if a user was registered before, skip API call
+    const userExists = localStorage.getItem('userExists');
+    if (userExists === 'true') {
+      setIsFirstTimeUser(false);
+      return;
+    }
+    
+    // Otherwise check with backend API
+    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+    fetch(`${API_BASE}/api/auth/check-first-user`)
       .then(res => res.json())
-      .then(data => setIsFirstTimeUser(data.isFirstUser))
+      .then(data => {
+        setIsFirstTimeUser(data.isFirstUser);
+        // If user exists, store it in localStorage
+        if (!data.isFirstUser) {
+          localStorage.setItem('userExists', 'true');
+        }
+      })
       .catch(() => setIsFirstTimeUser(false));
   }, []);
 
@@ -107,6 +122,10 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
     try {
       if (isFirstTimeUser) {
         await onRegister({ email, password, name });
+        // After successful registration, mark that a user now exists
+        setIsFirstTimeUser(false);
+        // Store in localStorage to persist across page reloads
+        localStorage.setItem('userExists', 'true');
       } else {
         await onLogin({ email, password });
       }
