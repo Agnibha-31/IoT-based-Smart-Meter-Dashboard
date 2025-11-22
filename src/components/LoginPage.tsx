@@ -191,7 +191,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
         >
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-white/90 text-sm mb-6">
+              <p className="text-white/90 text-lg font-bold mb-6">
                 {isFirstTimeUser ? 'Account Registration' : translate('enter_credentials')}
               </p>
             </div>
@@ -249,7 +249,7 @@ export default function LoginPage({ onLogin, onRegister }: LoginProps) {
             )}
             
             <div className="relative">
-              <label className="block text-white/90 text-sm mb-2 text-center">{translate('username')}</label>
+              <label className="block text-white/90 text-sm mb-2 text-center">Mail ID</label>
               <div className="relative w-4/5 mx-auto">
                 <motion.input
                   whileFocus={{ scale: 1.02 }}
